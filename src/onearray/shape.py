@@ -12,71 +12,6 @@ from .errors import ArrayError
 __all__ = ["dim", "infer_shape"]
 
 
-def dim(arr):
-    """
-    Get the number of dimensions of the input array/tensor.
-    If the input is a nested array, return the number of dimensions of the innermost arrays plus one.
-
-    Parameters
-    ----------
-    arr : list, np.ndarray, or torch.Tensor
-        The input array or tensor.
-
-    Returns
-    -------
-    int
-        The number of dimensions of the input array or tensor.
-
-    Raises
-    ------
-    TypeError
-        If the input is not a list, numpy array, or torch tensor, or if the nested array structure is invalid.
-    """
-    if isinstance(arr, numpy_array_types):
-        return arr.ndim
-    elif isinstance(arr, torch_tensor_types):
-        return arr.ndim
-    elif isinstance(arr, list):
-        shape = _infer_shape_recursive(arr, seen=set())
-        if shape is None:
-            raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-        return len(shape)
-    else:
-        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-
-
-def len(arr):
-    """
-    Get the length of the input array/tensor
-    If the input is a nested array, return the length of the outermost array.
-    If the input is a 1D array, return its length.
-    If the input is a multi-dimensional array, return the size of the first dimension.
-
-    Parameters
-    ----------
-    arr : list, np.ndarray, or torch.Tensor
-        The input array or tensor.
-
-    Returns
-    -------
-    int
-        The length of the input array or tensor.
-
-    Raises
-    ------
-    TypeError
-        If the input is not a list, numpy array, or torch tensor.
-    """
-    if isinstance(arr, numpy_array_types):
-        return arr.shape[0]
-    elif isinstance(arr, torch_tensor_types):
-        return arr.shape[0]
-    elif isinstance(arr, list):
-        return builtins.len(arr)
-    else:
-        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-
-
 def infer_shape(x: Any) -> tuple[int, ...] | None:
     """
     Infer the rectangular shape of an array-like object.
@@ -154,3 +89,69 @@ def _infer_shape_recursive(x: Any, seen: set[int]) -> tuple[int, ...] | None:
         return (n,) + first_shape
 
     return None
+
+
+def dim(arr):
+    """
+    Get the number of dimensions of the input array/tensor.
+    If the input is a nested array, return the number of dimensions of the innermost arrays plus one.
+
+    Parameters
+    ----------
+    arr : list, np.ndarray, or torch.Tensor
+        The input array or tensor.
+
+    Returns
+    -------
+    int
+        The number of dimensions of the input array or tensor.
+
+    Raises
+    ------
+    TypeError
+        If the input is not a list, numpy array, or torch tensor, or if the nested array structure is invalid.
+    """
+    if isinstance(arr, numpy_array_types):
+        return arr.ndim
+    elif isinstance(arr, torch_tensor_types):
+        return arr.ndim
+    elif isinstance(arr, list):
+        shape = _infer_shape_recursive(arr, seen=set())
+        if shape is None:
+            raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+        return len(shape)
+    else:
+        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+
+
+def len(arr):
+    """
+    Get the length of the input array/tensor
+    If the input is a nested array, return the length of the outermost array.
+    If the input is a 1D array, return its length.
+    If the input is a multi-dimensional array, return the size of the first dimension.
+
+    Parameters
+    ----------
+    arr : list, np.ndarray, or torch.Tensor
+        The input array or tensor.
+
+    Returns
+    -------
+    int
+        The length of the input array or tensor.
+
+    Raises
+    ------
+    TypeError
+        If the input is not a list, numpy array, or torch tensor.
+    """
+    if isinstance(arr, numpy_array_types):
+        return arr.shape[0]
+    elif isinstance(arr, torch_tensor_types):
+        return arr.shape[0]
+    elif isinstance(arr, list):
+        return builtins.len(arr)
+    else:
+        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+

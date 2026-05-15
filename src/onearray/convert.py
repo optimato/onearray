@@ -75,8 +75,7 @@ def array(arr, mode="numpy"):
                     [
                         (
                             x
-                            if isinstance(x, torch_tensor_types)
-                            and x.device.type == "cpu"
+                            if isinstance(x, torch_tensor_types) and x.device.type == "cpu"
                             else (
                                 x.cpu()
                                 if isinstance(x, torch_tensor_types)
@@ -224,7 +223,10 @@ def to_list(arr):
     elif isinstance(arr, numpy_array_types):
         return arr.tolist()
     elif isinstance(arr, torch_tensor_types):
-        return arr.detach().cpu().tolist()
+        tensor = arr.detach()
+        if tensor.device.type == "cpu":
+            return tensor.tolist()
+        return tensor.cpu().tolist()
     else:
         raise TypeError("Input must be a list, numpy array, or torch tensor")
 
