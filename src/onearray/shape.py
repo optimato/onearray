@@ -116,7 +116,7 @@ def dim(arr):
     elif isinstance(arr, torch_tensor_types):
         return arr.ndim
     elif isinstance(arr, list):
-        shape = _infer_shape_recursive(arr, seen=set())
+        shape = infer_shape(arr)
         if shape is None:
             raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
         return len(shape)
@@ -154,4 +154,3 @@ def len(arr):
         return builtins.len(arr)
     else:
         raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-
