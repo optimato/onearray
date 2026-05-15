@@ -9,7 +9,7 @@ try:
     numpy_array_types = (np.ndarray,)
     numpy_scalar_types = (np.number, np.bool_)
     numpy_bool_types = (np.bool_,)
-except ModuleNotFoundError:  # pragma: no cover - depends on environment
+except ModuleNotFoundError:  # pragma: no cover - depends on installed packages
     np = None
     HAS_NUMPY = False
     numpy_array_types = ()
@@ -21,7 +21,7 @@ try:
 
     HAS_TORCH = True
     torch_tensor_types = (torch.Tensor,)
-except ModuleNotFoundError:  # pragma: no cover - depends on environment
+except ModuleNotFoundError:  # pragma: no cover - depends on installed packages
     torch = None
     HAS_TORCH = False
     torch_tensor_types = ()

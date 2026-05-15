@@ -75,7 +75,8 @@ def array(arr, mode="numpy"):
                     [
                         (
                             x
-                            if isinstance(x, torch_tensor_types) and not x.is_cuda
+                            if isinstance(x, torch_tensor_types)
+                            and x.device.type == "cpu"
                             else (
                                 x.cpu()
                                 if isinstance(x, torch_tensor_types)
@@ -223,9 +224,7 @@ def to_list(arr):
     elif isinstance(arr, numpy_array_types):
         return arr.tolist()
     elif isinstance(arr, torch_tensor_types):
-        if arr.requires_grad:
-            return arr.detach().cpu().tolist()
-        return arr.cpu().tolist()
+        return arr.detach().cpu().tolist()
     else:
         raise TypeError("Input must be a list, numpy array, or torch tensor")
 
