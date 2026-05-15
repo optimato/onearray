@@ -1,7 +1,11 @@
-from . import checks
+from ._backend import (
+    numpy_array_types,
+    require_numpy,
+    require_torch,
+    torch_tensor_types,
+)
 from .errors import ArrayError
-import numpy as np
-import torch
+from .validation import is_array, is_array_like, is_valid_array_mode
 
 __all__ = ["array", "add_axis", "to_list", "zeros_like"]
 
@@ -40,87 +44,89 @@ def array(arr, mode="numpy"):
         If CUDA is not available when requested.
     """
 
-    if not checks.is_array(arr):
+    if not (isinstance(arr, list) or is_array(arr)):
         raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
 
-    if not checks.is_valid_array_mode(mode):
+    if not is_valid_array_mode(mode):
         raise ValueError(ArrayError.INVALID_ARRAY_MODE.value)
 
     if mode == "numpy":
-        if isinstance(arr, torch.Tensor):
+        np = require_numpy()
+        if isinstance(arr, torch_tensor_types):
             return arr.cpu().detach().numpy()
-        elif isinstance(arr, np.ndarray):
+        elif isinstance(arr, numpy_array_types):
             return arr
         elif isinstance(arr, list):
+            if not is_array_like(arr):
+                raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
             return np.array(arr)
         else:
             raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
 
     elif mode == "torch":
-        if isinstance(arr, np.ndarray):
+        torch = require_torch()
+        if isinstance(arr, numpy_array_types):
             return torch.tensor(arr.copy())
         elif isinstance(arr, list):
-            if checks.is_numeric_array(arr):
-                return torch.tensor(arr)
-            elif all(checks.is_numeric_array(x) for x in arr):
+            if not is_array_like(arr):
+                raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
+            if all(is_array(x) for x in arr):
                 return torch.stack(
                     [
                         (
                             x
-                            if isinstance(x, torch.Tensor) and x.is_cpu
+                            if isinstance(x, torch_tensor_types) and not x.is_cuda
                             else (
                                 x.cpu()
-                                if isinstance(x, torch.Tensor)
+                                if isinstance(x, torch_tensor_types)
                                 else torch.tensor(x)
                             )
                         )
                         for x in arr
                     ]
                 )
-            else:
-                raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
-        elif isinstance(arr, torch.Tensor) and arr.is_cuda:
+            return torch.tensor(arr)
+        elif isinstance(arr, torch_tensor_types) and arr.is_cuda:
             # If the tensor is on GPU, move it to CPU first
             return arr.cpu()
-        elif isinstance(arr, torch.Tensor):
+        elif isinstance(arr, torch_tensor_types):
             return arr
         else:
             raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
 
-    elif mode == "torch_cuda" and torch.cuda.is_available():
-        if isinstance(arr, np.ndarray):
+    elif mode == "torch_cuda":
+        torch = require_torch()
+        if not torch.cuda.is_available():
+            raise RuntimeError(ArrayError.CUDA_NOT_AVAILABLE.value)
+        if isinstance(arr, numpy_array_types):
             return torch.tensor(arr.copy(), device="cuda")
         elif isinstance(arr, list):
-            if checks.is_numeric_array(arr):
-                return torch.tensor(arr).cuda()
-            elif all(checks.is_numeric_array(x) for x in arr):
+            if not is_array_like(arr):
+                raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
+            if all(is_array(x) for x in arr):
                 return torch.stack(
                     [
                         (
                             x
-                            if isinstance(x, torch.Tensor) and x.is_cuda
+                            if isinstance(x, torch_tensor_types) and x.is_cuda
                             else (
                                 x.cuda()
-                                if isinstance(x, torch.Tensor)
-                                else torch.tensor(x).cuda()
+                                if isinstance(x, torch_tensor_types)
+                                else torch.tensor(x, device="cuda")
                             )
                         )
                         for x in arr
                     ]
                 )
-            else:
-                raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
-        elif isinstance(arr, torch.Tensor) and arr.is_cuda:
+            return torch.tensor(arr).cuda()
+        elif isinstance(arr, torch_tensor_types) and arr.is_cuda:
             # If the tensor is already on GPU, return it as is
             return arr
-        elif isinstance(arr, torch.Tensor):
+        elif isinstance(arr, torch_tensor_types):
             # Move the tensor to GPU
             return arr.cuda()
         else:
             raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
-
-    elif mode == "torch_cuda" and not torch.cuda.is_available():
-        raise RuntimeError(ArrayError.CUDA_NOT_AVAILABLE.value)
 
     else:
         raise ValueError(ArrayError.INVALID_ARRAY_MODE.value)
@@ -164,7 +170,7 @@ def add_axis(arr, *axes):
             [2],
             [3]]])
     """
-    if not isinstance(arr, (np.ndarray, torch.Tensor)):
+    if not isinstance(arr, numpy_array_types + torch_tensor_types):
         raise TypeError("Input must be a numpy array or torch tensor")
 
     if max(axes) >= len(axes) + arr.ndim:
@@ -179,12 +185,14 @@ def add_axis(arr, *axes):
         raise ValueError("All axes must be either positive or negative")
 
     # Create a copy to avoid modifying the original
-    result = arr.copy() if isinstance(arr, np.ndarray) else arr.clone()
+    result = arr.copy() if isinstance(arr, numpy_array_types) else arr.clone()
 
-    if isinstance(result, np.ndarray):
+    if isinstance(result, numpy_array_types):
+        np = require_numpy()
         for axis in axes:
             result = np.expand_dims(result, axis=axis)
     else:  # torch.Tensor
+        torch = require_torch()
         for axis in axes:
             result = torch.unsqueeze(result, dim=axis)
 
@@ -212,12 +220,12 @@ def to_list(arr):
     """
     if isinstance(arr, list):
         return arr
-    elif isinstance(arr, np.ndarray):
+    elif isinstance(arr, numpy_array_types):
         return arr.tolist()
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
         if arr.requires_grad:
-            return arr.cpu().detach().numpy().tolist()
-        return arr.cpu().numpy().tolist()
+            return arr.detach().cpu().tolist()
+        return arr.cpu().tolist()
     else:
         raise TypeError("Input must be a list, numpy array, or torch tensor")
 
@@ -241,9 +249,11 @@ def zeros_like(arr):
     TypeError
         If input is not a numpy array or torch tensor
     """
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return np.zeros_like(arr)
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
+        torch = require_torch()
         return torch.zeros_like(arr)
     else:
         raise TypeError("Input must be a numpy array or torch tensor")

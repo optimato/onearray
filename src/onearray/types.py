@@ -12,11 +12,12 @@ by providing meaningful names for commonly used type combinations.
 from __future__ import annotations
 
 from collections.abc import Sequence
-from typing import Literal, TypeAlias
+from typing import Any, Literal, TypeAlias, TYPE_CHECKING
 
-import numpy as np
-import numpy.typing as npt
-import torch
+if TYPE_CHECKING:
+    import numpy as np
+    import numpy.typing as npt
+    import torch
 
 __all__ = [
     "NumberLike",
@@ -30,7 +31,10 @@ __all__ = [
 # ---------------------------------------------------------------------------
 
 # Python and NumPy scalar numbers (real, complex, boolean) but NOT np.str_, np.datetime64, etc.
-NumberLike: TypeAlias = bool | int | float | complex | np.number | np.bool_
+if TYPE_CHECKING:
+    NumberLike: TypeAlias = bool | int | float | complex | np.number | np.bool_
+else:
+    NumberLike: TypeAlias = bool | int | float | complex | Any
 """
 Type alias for scalar numeric types.
 
@@ -38,7 +42,10 @@ Includes Python built-in types and NumPy scalar types.
 """
 
 # Normalized array type used internally by onearray
-Array: TypeAlias = npt.NDArray[np.number | np.bool_] | torch.Tensor
+if TYPE_CHECKING:
+    Array: TypeAlias = npt.NDArray[np.number | np.bool_] | torch.Tensor
+else:
+    Array: TypeAlias = Any
 """
 Type alias for array container types.
 

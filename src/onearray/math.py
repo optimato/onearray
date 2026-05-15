@@ -1,5 +1,9 @@
-import numpy as np
-import torch
+from ._backend import (
+    numpy_array_types,
+    require_numpy,
+    require_torch,
+    torch_tensor_types,
+)
 
 __all__ = ["sum", "exp", "abs"]
 
@@ -28,9 +32,11 @@ def sum(arr, axis=None, keepdims=False):
         If the input is not a numpy array or torch tensor.
     """
 
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return np.sum(arr, axis=axis, keepdims=keepdims)
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
+        torch = require_torch()
         return torch.sum(arr, dim=axis, keepdim=keepdims)
     else:
         raise TypeError("Input must be a numpy array or torch tensor")
@@ -56,9 +62,11 @@ def exp(arr):
         If the input is not a numpy array or torch tensor.
     """
 
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return np.exp(arr)
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
+        torch = require_torch()
         return torch.exp(arr)
     else:
         raise TypeError("Input must be a numpy array or torch tensor")
@@ -84,9 +92,11 @@ def abs(arr):
         If the input is not a numpy array or torch tensor.
     """
 
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return np.abs(arr)
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
+        torch = require_torch()
         return torch.abs(arr)
     else:
         raise TypeError("Input must be a numpy array or torch tensor")

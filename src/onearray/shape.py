@@ -2,13 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 from collections.abc import Sequence
-import numpy as np
 import builtins
-import torch
 
+from ._backend import numpy_array_types, torch_tensor_types
 from .validation import _is_string_like, is_array, is_numberlike
 from .errors import ArrayError
-from . import checks, convert
 
 
 __all__ = ["dim", "infer_shape"]
@@ -34,21 +32,15 @@ def dim(arr):
     TypeError
         If the input is not a list, numpy array, or torch tensor, or if the nested array structure is invalid.
     """
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
         return arr.ndim
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
         return arr.ndim
     elif isinstance(arr, list):
-        if checks.is_numeric_array(arr) or (
-            checks.is_array(arr) and not any(checks.is_array(x) for x in arr)
-        ):
-            return convert.array(arr).ndim
-        elif all(checks.is_array(x) for x in arr) and all(
-            dim(x) == dim(arr[0]) for x in arr
-        ):
-            return dim(arr[0]) + 1
-        else:
+        shape = infer_shape(arr)
+        if shape is None:
             raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+        return len(shape)
     else:
         raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
 
@@ -75,9 +67,9 @@ def len(arr):
     TypeError
         If the input is not a list, numpy array, or torch tensor.
     """
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
         return arr.shape[0]
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
         return arr.shape[0]
     elif isinstance(arr, list):
         return builtins.len(arr)
