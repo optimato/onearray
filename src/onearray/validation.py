@@ -59,7 +59,7 @@ def is_numberlike(x: Any) -> bool:
     return isinstance(x, Number) or isinstance(x, numpy_scalar_types)
 
 
-def _is_numpy_numeric_or_bool_dtype(dtype: np.dtype) -> bool:
+def _is_numpy_numeric_or_bool_dtype(dtype: Any) -> bool:
     """
     Check whether a NumPy dtype is numeric or boolean.
 
@@ -77,7 +77,7 @@ def _is_numpy_numeric_or_bool_dtype(dtype: np.dtype) -> bool:
     return np.issubdtype(dtype, np.number) or np.issubdtype(dtype, np.bool_)
 
 
-def _is_torch_numeric_or_bool_dtype(dtype: torch.dtype) -> bool:
+def _is_torch_numeric_or_bool_dtype(dtype: Any) -> bool:
     """
     Check whether a torch dtype is numeric or boolean.
 
