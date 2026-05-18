@@ -18,7 +18,9 @@ def _normalize_fft_axes(axis, ndim):
         axes = tuple(range(ndim))
     elif isinstance(axis, Integral):
         axes = (axis,)
-    elif isinstance(axis, Sequence) and not isinstance(axis, (str, bytes, bytearray)):
+    elif isinstance(axis, Sequence) and not isinstance(
+        axis, (str, bytes, bytearray, memoryview)
+    ):
         axes = tuple(axis)
     else:
         raise TypeError("Axis must be an int or a sequence of ints")
@@ -26,12 +28,19 @@ def _normalize_fft_axes(axis, ndim):
     normalized = []
     for ax in axes:
         if not isinstance(ax, Integral):
-            raise TypeError("Axis entries must be integers")
+            raise TypeError(
+                f"Axis entries must be integers, got {type(ax).__name__}"
+            )
+        original_ax = ax
         if ax < 0:
             ax += ndim
         if ax < 0 or ax >= ndim:
-            raise ValueError("Axis out of range")
+            raise ValueError(
+                f"Axis {original_ax} out of range for array with {ndim} dimensions"
+            )
         normalized.append(int(ax))
+    if len(set(normalized)) != len(normalized):
+        raise ValueError("Axis entries must be unique")
     return tuple(normalized)
 
 
