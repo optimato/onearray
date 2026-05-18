@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from numbers import Integral
+
 from ._backend import (
     numpy_array_types,
     require_numpy,
@@ -10,9 +13,19 @@ from .validation import is_valid_array_mode
 __all__ = ["fft", "ifft", "fftfreq", "fftshift", "ifftshift"]
 
 
+def _normalize_fft_axes(axis, ndim):
+    if axis is None:
+        return tuple(range(ndim))
+    if isinstance(axis, Integral):
+        return (axis,)
+    if isinstance(axis, Sequence) and not isinstance(axis, (str, bytes, bytearray)):
+        return tuple(axis)
+    raise TypeError("Axis must be an int or a sequence of ints")
+
+
 def fft(arr, axis=None):
     """
-    Compute the Fast Fourier Transform of the input array/tensor in 1D or 2D.
+    Compute the Fast Fourier Transform of the input array/tensor in 1D, 2D, or ND.
 
     Parameters
     ----------
@@ -34,28 +47,27 @@ def fft(arr, axis=None):
     if not isinstance(arr, numpy_array_types + torch_tensor_types):
         raise TypeError("Input must be a numpy array or torch tensor")
 
-    if axis is None:
-        axis = tuple(range(arr.ndim))
+    axes = _normalize_fft_axes(axis, arr.ndim)
 
     if isinstance(arr, numpy_array_types):
         np = require_numpy()
-        return (
-            np.fft.fft2(arr, axes=axis)
-            if len(axis) == 2
-            else np.fft.fft(arr, axis=axis)
-        )
+        if len(axes) == 1:
+            return np.fft.fft(arr, axis=axes[0])
+        if len(axes) == 2:
+            return np.fft.fft2(arr, axes=axes)
+        return np.fft.fftn(arr, axes=axes)
     else:
         torch = require_torch()
-        return (
-            torch.fft.fft2(arr, dim=axis)
-            if len(axis) == 2
-            else torch.fft.fft(arr, dim=axis)
-        )
+        if len(axes) == 1:
+            return torch.fft.fft(arr, dim=axes[0])
+        if len(axes) == 2:
+            return torch.fft.fft2(arr, dim=axes)
+        return torch.fft.fftn(arr, dim=axes)
 
 
 def ifft(arr, axis=None):
     """
-    Compute the Inverse Fast Fourier Transform of the input array/tensor in 1D or 2D.
+    Compute the Inverse Fast Fourier Transform of the input array/tensor in 1D, 2D, or ND.
 
     Parameters
     ----------
@@ -77,22 +89,21 @@ def ifft(arr, axis=None):
     if not isinstance(arr, numpy_array_types + torch_tensor_types):
         raise TypeError("Input must be a numpy array or torch tensor")
 
-    if axis is None:
-        axis = tuple(range(arr.ndim))
+    axes = _normalize_fft_axes(axis, arr.ndim)
     if isinstance(arr, numpy_array_types):
         np = require_numpy()
-        return (
-            np.fft.ifft2(arr, axes=axis)
-            if len(axis) == 2
-            else np.fft.ifft(arr, axis=axis)
-        )
+        if len(axes) == 1:
+            return np.fft.ifft(arr, axis=axes[0])
+        if len(axes) == 2:
+            return np.fft.ifft2(arr, axes=axes)
+        return np.fft.ifftn(arr, axes=axes)
     else:
         torch = require_torch()
-        return (
-            torch.fft.ifft2(arr, dim=axis)
-            if len(axis) == 2
-            else torch.fft.ifft(arr, dim=axis)
-        )
+        if len(axes) == 1:
+            return torch.fft.ifft(arr, dim=axes[0])
+        if len(axes) == 2:
+            return torch.fft.ifft2(arr, dim=axes)
+        return torch.fft.ifftn(arr, dim=axes)
 
 
 def fftfreq(n, d=1.0, mode="numpy"):
