@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from ._backend import (
     numpy_array_types,
     require_numpy,
@@ -15,16 +17,16 @@ def array(arr, mode="numpy"):
     Convert input to numpy or torch tensor based on mode.
 
     Allowed input types are:
-    - list of numbers
+    - sequence of numbers
     - numpy ndarray
     - torch Tensor
-    - list of lists (ND array)
-    - list of torch Tensors
-    - list of numpy ndarrays
+    - sequence of sequences (ND array)
+    - sequence of torch Tensors
+    - sequence of numpy ndarrays
 
     Parameters
     ----------
-    arr : list, np.ndarray, or torch.Tensor
+    arr : Sequence, np.ndarray, or torch.Tensor
         The input array to convert.
     mode : str, optional
         The target array mode ('numpy', 'torch', 'torch_cuda'), by default 'numpy'
@@ -44,7 +46,7 @@ def array(arr, mode="numpy"):
         If CUDA is not available when requested.
     """
 
-    if not (isinstance(arr, list) or is_array(arr)):
+    if not is_array_like(arr):
         raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
 
     if not is_valid_array_mode(mode):
@@ -56,7 +58,7 @@ def array(arr, mode="numpy"):
             return arr.cpu().detach().numpy()
         elif isinstance(arr, numpy_array_types):
             return arr
-        elif isinstance(arr, list):
+        elif isinstance(arr, Sequence):
             if not is_array_like(arr):
                 raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
             return np.array(arr)
@@ -67,7 +69,7 @@ def array(arr, mode="numpy"):
         torch = require_torch()
         if isinstance(arr, numpy_array_types):
             return torch.tensor(arr.copy())
-        elif isinstance(arr, list):
+        elif isinstance(arr, Sequence):
             if not is_array_like(arr):
                 raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
             if all(is_array(x) for x in arr):
@@ -100,7 +102,7 @@ def array(arr, mode="numpy"):
             raise RuntimeError(ArrayError.CUDA_NOT_AVAILABLE.value)
         if isinstance(arr, numpy_array_types):
             return torch.tensor(arr.copy(), device="cuda")
-        elif isinstance(arr, list):
+        elif isinstance(arr, Sequence):
             if not is_array_like(arr):
                 raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
             if all(is_array(x) for x in arr):
