@@ -15,12 +15,24 @@ __all__ = ["fft", "ifft", "fftfreq", "fftshift", "ifftshift"]
 
 def _normalize_fft_axes(axis, ndim):
     if axis is None:
-        return tuple(range(ndim))
-    if isinstance(axis, Integral):
-        return (axis,)
-    if isinstance(axis, Sequence) and not isinstance(axis, (str, bytes, bytearray)):
-        return tuple(axis)
-    raise TypeError("Axis must be an int or a sequence of ints")
+        axes = tuple(range(ndim))
+    elif isinstance(axis, Integral):
+        axes = (axis,)
+    elif isinstance(axis, Sequence) and not isinstance(axis, (str, bytes, bytearray)):
+        axes = tuple(axis)
+    else:
+        raise TypeError("Axis must be an int or a sequence of ints")
+
+    normalized = []
+    for ax in axes:
+        if not isinstance(ax, Integral):
+            raise TypeError("Axis entries must be integers")
+        if ax < 0:
+            ax += ndim
+        if ax < 0 or ax >= ndim:
+            raise ValueError("Axis out of range")
+        normalized.append(int(ax))
+    return tuple(normalized)
 
 
 def fft(arr, axis=None):
