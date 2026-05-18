@@ -58,7 +58,7 @@ def array(arr, mode="numpy"):
             return arr.cpu().detach().numpy()
         elif isinstance(arr, numpy_array_types):
             return arr
-        elif isinstance(arr, Sequence):
+        elif isinstance(arr, Sequence) and not isinstance(arr, (str, bytes, bytearray)):
             if not is_array_like(arr):
                 raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
             return np.array(arr)
@@ -69,7 +69,7 @@ def array(arr, mode="numpy"):
         torch = require_torch()
         if isinstance(arr, numpy_array_types):
             return torch.tensor(arr.copy())
-        elif isinstance(arr, Sequence):
+        elif isinstance(arr, Sequence) and not isinstance(arr, (str, bytes, bytearray)):
             if not is_array_like(arr):
                 raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
             if all(is_array(x) for x in arr):
@@ -102,7 +102,7 @@ def array(arr, mode="numpy"):
             raise RuntimeError(ArrayError.CUDA_NOT_AVAILABLE.value)
         if isinstance(arr, numpy_array_types):
             return torch.tensor(arr.copy(), device="cuda")
-        elif isinstance(arr, Sequence):
+        elif isinstance(arr, Sequence) and not isinstance(arr, (str, bytes, bytearray)):
             if not is_array_like(arr):
                 raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
             if all(is_array(x) for x in arr):
