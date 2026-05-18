@@ -98,8 +98,8 @@ def dim(arr):
 
     Parameters
     ----------
-    arr : list, np.ndarray, or torch.Tensor
-        The input array or tensor.
+    arr : ArrayLike
+        The input array-like object.
 
     Returns
     -------
@@ -109,13 +109,15 @@ def dim(arr):
     Raises
     ------
     TypeError
-        If the input is not a list, numpy array, or torch tensor, or if the nested array structure is invalid.
+        If the input is not array-like or the nested array structure is invalid.
     """
     if isinstance(arr, numpy_array_types):
         return arr.ndim
     elif isinstance(arr, torch_tensor_types):
         return arr.ndim
-    elif isinstance(arr, list):
+    elif is_numberlike(arr):
+        return 0
+    elif isinstance(arr, Sequence):
         shape = infer_shape(arr)
         if shape is None:
             raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
@@ -133,8 +135,8 @@ def len(arr):
 
     Parameters
     ----------
-    arr : list, np.ndarray, or torch.Tensor
-        The input array or tensor.
+    arr : ArrayLike
+        The input array-like object.
 
     Returns
     -------
@@ -144,13 +146,16 @@ def len(arr):
     Raises
     ------
     TypeError
-        If the input is not a list, numpy array, or torch tensor.
+        If the input is not array-like.
     """
     if isinstance(arr, numpy_array_types):
         return arr.shape[0]
     elif isinstance(arr, torch_tensor_types):
         return arr.shape[0]
-    elif isinstance(arr, list):
+    elif isinstance(arr, Sequence):
+        shape = infer_shape(arr)
+        if shape is None or shape == ():
+            raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
         return builtins.len(arr)
     else:
         raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
