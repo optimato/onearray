@@ -172,7 +172,9 @@ def add_axis(arr, *axes):
             [2],
             [3]]])
     """
-    if not isinstance(arr, numpy_array_types + torch_tensor_types):
+    is_numpy = isinstance(arr, numpy_array_types)
+    is_torch = isinstance(arr, torch_tensor_types)
+    if not (is_numpy or is_torch):
         raise TypeError("Input must be a numpy array or torch tensor")
 
     if max(axes) >= len(axes) + arr.ndim:
@@ -187,23 +189,19 @@ def add_axis(arr, *axes):
         raise ValueError("All axes must be either positive or negative")
 
     # Create a copy to avoid modifying the original
-    if isinstance(arr, numpy_array_types):
+    if is_numpy:
         result = arr.copy()
-    elif isinstance(arr, torch_tensor_types):
+    elif is_torch:
         result = arr.clone()
-    else:
-        raise TypeError("Input must be a numpy array or torch tensor")
 
-    if isinstance(result, numpy_array_types):
+    if is_numpy:
         np = require_numpy()
         for axis in axes:
             result = np.expand_dims(result, axis=axis)
-    elif isinstance(result, torch_tensor_types):
+    elif is_torch:
         torch = require_torch()
         for axis in axes:
             result = torch.unsqueeze(result, dim=axis)
-    else:
-        raise TypeError("Input must be a numpy array or torch tensor")
 
     return result
 
