@@ -208,34 +208,41 @@ def add_axis(arr, *axes):
 
 def to_list(arr):
     """
-    Convert a numpy array, torch tensor, or list to a Python list.
+    Convert an array-like input to nested Python lists.
 
     Parameters
     ----------
-    arr : list, np.ndarray, or torch.Tensor
-        The input array or tensor.
+    arr : array-like
+        The input array-like object.
 
     Returns
     -------
-    list
-        The converted Python list.
+    list | scalar
+        The converted Python list (or a scalar for 0-d inputs).
 
     Raises
     ------
     TypeError
-        If the input is not a list, numpy array, or torch tensor.
+        If the input is not array-like.
     """
-    if isinstance(arr, list):
-        return arr
-    elif isinstance(arr, numpy_array_types):
-        return arr.tolist()
-    elif isinstance(arr, torch_tensor_types):
-        tensor = arr.detach()
-        if tensor.device.type == "cpu":
+    if not is_array_like(arr):
+        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+
+    def _to_list(value):
+        if isinstance(value, numpy_array_types):
+            return value.tolist()
+        if isinstance(value, torch_tensor_types):
+            tensor = value.detach()
+            if tensor.device.type != "cpu":
+                tensor = tensor.cpu()
             return tensor.tolist()
-        return tensor.cpu().tolist()
-    else:
-        raise TypeError("Input must be a list, numpy array, or torch tensor")
+        if isinstance(value, Sequence) and not isinstance(
+            value, (str, bytes, bytearray)
+        ):
+            return [_to_list(item) for item in value]
+        return value
+
+    return _to_list(arr)
 
 
 def zeros_like(arr):
