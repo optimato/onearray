@@ -43,7 +43,7 @@ docs_dir = "docs"
 #
 # Read more: https://zensical.org/docs/setup/basics/#copyright
 copyright = """
-Copyright &copy; 2026 The authors
+Copyright &copy; 2026 Marcello Fonda
 """
 
 # Zensical supports both implicit navigation and explicitly defined navigation.
@@ -63,6 +63,9 @@ nav = [
   {"Development" = [
     {"API contracts" = "contracts.md"},
   ]},
+#  {"API" = [
+#    {"types" = "api/types.md"}
+#  ]}
 ]
 
 # With the "extra_css" option you can add your own CSS styling to customize
@@ -366,3 +369,11 @@ custom_checkbox = true
 [project.markdown_extensions.pymdownx.tilde]
 
 
+[project.plugins.mkdocstrings.handlers.python]
+inventories = ["https://docs.python.org/3/objects.inv"]
+paths = ["src"]
+
+[project.plugins.mkdocstrings.handlers.python.options]
+docstring_style = "numpy"
+inherited_members = true
+show_source = true

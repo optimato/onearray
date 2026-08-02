@@ -1,11 +1,13 @@
 # OneArray
 
-*NumPy syntax across array packages*
+**NumPy syntax across array packages**
 
-Have you ever written some lengthy code in numpy, only to later realize you needed
-pytorch functionality and have to rewrite everything from scratch?
+Have you ever written some lengthy code in NumPy, only to later realize you needed
+some PyTorch functionality and had to rewrite everything from scratch?
 
-If you did, then OneArray might be the package for you.
+*If you did, then OneArray might be the package for you.*
+
+## What it does
 
 OneArray lets you write generic code and choose the *backend* later.
 The same function works with NumPy arrays and PyTorch tensors, selecting 

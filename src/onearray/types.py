@@ -33,30 +33,46 @@ __all__ = [
 # Python and NumPy scalar numbers (real, complex, boolean) but NOT np.str_, np.datetime64, etc.
 if TYPE_CHECKING:
     NumberLike: TypeAlias = bool | int | float | complex | np.number | np.bool_
+    """
+    Type alias for scalar numeric types.
+
+    Includes Python built-in types and NumPy scalar types.
+    """
 else:
     NumberLike: TypeAlias = bool | int | float | complex | Any
-"""
-Type alias for scalar numeric types.
+    """
+    Type alias for scalar numeric types.
 
-Includes Python built-in types and NumPy scalar types.
-"""
+    Includes Python built-in types and NumPy scalar types.
+    """
 
 # Normalized array type used internally by onearray
 if TYPE_CHECKING:
     Array: TypeAlias = npt.NDArray[np.number | np.bool_] | torch.Tensor
+    """
+    Type alias for array container types.
+
+    Includes NumPy ndarrays with numeric or boolean dtypes, and PyTorch tensors.
+
+    Notes
+    -----
+    - This type does not include other array-like types such as lists or tuples.
+    - This type does not include NumPy arrays with non-numeric dtypes such as strings or datetime64.
+    - This type does not include scalar numeric types; see `NumberLike` for that.
+    """
 else:
     Array: TypeAlias = Any
-"""
-Type alias for array container types.
+    """
+    Type alias for array container types.
 
-Includes NumPy ndarrays with numeric or boolean dtypes, and PyTorch tensors.
+    Includes NumPy ndarrays with numeric or boolean dtypes, and PyTorch tensors.
 
-Notes
------
-- This type does not include other array-like types such as lists or tuples.
-- This type does not include NumPy arrays with non-numeric dtypes such as strings or datetime64.
-- This type does not include scalar numeric types; see `NumberLike` for that.
-"""
+    Notes
+    -----
+    - This type does not include other array-like types such as lists or tuples.
+    - This type does not include NumPy arrays with non-numeric dtypes such as strings or datetime64.
+    - This type does not include scalar numeric types; see `NumberLike` for that.
+    """
 
 # User-facing "anything that can be turned into an Array".
 # This is intentionally broad; runtime checks may still reject invalid values.
