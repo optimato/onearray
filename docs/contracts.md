@@ -118,6 +118,8 @@ The package root currently exports the following functions:
 not currently exported from the package root. `shape.infer_shape` is declared in
 its module's public API but is also not exported from the package root.
 
+`asarray` is a planned conversion function and is not currently exported.
+
 The package root must export the new validation API in place of the deprecated
 checks. The exact public status of `infer_shape` remains to be decided.
 
@@ -195,17 +197,47 @@ backend. The current implementation validates scalars successfully and then
 rejects them during backend conversion; this is an implementation-contract
 mismatch that must be corrected.
 
+The result owns storage independently from the input. Mutating the result must
+not mutate an input array container, and mutating an input array container must
+not mutate the result.
+
 The following details also require explicit decisions:
 
-- whether same-backend inputs are returned unchanged or copied;
-- whether cross-backend conversion preserves or copies storage;
-- dtype inference and preservation rules;
 - behavior for sequences containing array containers;
 - exception type when the requested backend is unavailable;
 - whether `torch_cuda` may perform an implicit device transfer.
 
 Invalid backend modes raise `ValueError`. Requesting CUDA when it is unavailable
 raises `RuntimeError` in the current implementation.
+
+### `asarray(value, mode="numpy")`
+
+`asarray` accepts the same inputs, modes, and dtype rules as `array`, but reuses
+or shares existing storage whenever the target backend and device permit it.
+
+- A same-backend, same-device array container may be returned unchanged.
+- A compatible NumPy array and CPU PyTorch tensor share storage when converted
+  between those backends.
+- A read-only NumPy array is copied when converted to PyTorch so that writable
+  tensor access cannot modify storage presented as read-only by NumPy.
+- A device transfer necessarily allocates new storage.
+- Converting a scalar or Python sequence necessarily allocates array storage.
+- When sharing is unsupported for a dtype, layout, or backend combination,
+  `asarray` may copy rather than fail solely because sharing is impossible.
+
+Callers must assume that mutating an `asarray` result may mutate the input and
+vice versa. A PyTorch tensor is detached before NumPy conversion: shared storage
+may remain, but the NumPy result does not participate in autograd.
+
+### Dtype behavior during conversion
+
+Conversion of an existing array container preserves its dtype when the target
+backend supports that dtype. If the target backend cannot represent the dtype,
+conversion raises an error. Conversion must never change dtype merely to make
+memory sharing possible.
+
+Python scalars and sequences do not carry a backend dtype. The selected backend
+applies its normal dtype inference rules when converting them.
 
 ### `to_list(value)`
 
@@ -277,6 +309,8 @@ These are observations, not adopted contracts:
    tensor, which conflicts with the `ArrayLike` definition and tuple support.
 6. Some function documentation uses "array-like" where the function is required
    to accept array containers only.
+7. `array` currently returns some same-backend inputs unchanged, which conflicts
+   with its independent-storage contract.
 
 ## Turning contracts into tests
 
@@ -299,8 +333,8 @@ ones:
 
 1. Decide whether `infer_shape` belongs in the package-root API and define the
    deprecated-check removal schedule.
-2. Resolve the remaining conversion decisions: copy semantics, dtype behavior,
-   backend availability, gradient detachment, axes, and preserved metadata.
+2. Resolve the remaining conversion decisions: backend availability, gradient
+   detachment, axes, sequences containing containers, and preserved metadata.
 3. Define individual mathematical and Fourier contracts under the settled
    array-container-only policy.
 4. Update every relevant docstring to state empty-input behavior explicitly.
