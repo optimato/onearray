@@ -10,12 +10,12 @@ some PyTorch functionality and had to rewrite everything from scratch?
 ## What it does
 
 OneArray lets you write generic code and choose the *backend* later.
-The same function works with NumPy arrays and PyTorch tensors, selecting 
+The same function works with NumPy arrays and PyTorch tensors, selecting
 the appropriate implementation from the input at runtime.
 
 The central rule is simple:
 
-> Numerical operations preserve and follow the backend of their input. 
+> Numerical operations preserve and follow the backend of their input.
 > Conversion utilities are available when data needs to move from one backend to another.
 
 Everything stays NumPy or PyTorch. There are no new classes to learn. The
@@ -36,8 +36,8 @@ tensors where an operation and the local PyTorch installation support them.
 
 Python scalars and rectangular nested sequences are *array-like*. They become
 NumPy arrays or PyTorch tensors only when passed to an explicit conversion
-function, but they can be validated without any allocation by OneArray's validation 
-utilities. Numerical functions do not perform any conversion. They select the 
+function, but they can be validated without any allocation by OneArray's validation
+utilities. Numerical functions do not perform any conversion. They select the
 appropriate NumPy or PyTorch implementation from the input at runtime.
 
 
