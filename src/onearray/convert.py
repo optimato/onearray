@@ -2,6 +2,7 @@ from collections.abc import Sequence
 
 from ._backend import (
     numpy_array_types,
+    numpy_scalar_types,
     require_numpy,
     require_torch,
     torch_tensor_types,
@@ -231,6 +232,8 @@ def to_list(arr):
     def _to_list(value):
         if isinstance(value, numpy_array_types):
             return value.tolist()
+        if isinstance(value, numpy_scalar_types):
+            return value.item()
         if isinstance(value, torch_tensor_types):
             tensor = value.detach()
             if tensor.device.type != "cpu":
@@ -264,11 +267,12 @@ def zeros_like(arr):
     TypeError
         If input is not a numpy array or torch tensor
     """
+    if not is_array(arr):
+        raise TypeError("Input must be a numpy array or torch tensor")
+
     if isinstance(arr, numpy_array_types):
         np = require_numpy()
         return np.zeros_like(arr)
     elif isinstance(arr, torch_tensor_types):
         torch = require_torch()
         return torch.zeros_like(arr)
-    else:
-        raise TypeError("Input must be a numpy array or torch tensor")
