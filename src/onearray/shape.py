@@ -65,28 +65,26 @@ def _infer_shape_recursive(x: Any, seen: set[int]) -> tuple[int, ...] | None:
         if oid in seen:
             return None
         seen.add(oid)
+        try:
+            n = builtins.len(x)
+            if n == 0:
+                # Policy choice: treat empty sequence as an empty 1D array
+                return (0,)
 
-        n = builtins.len(x)
-        if n == 0:
-            # Policy choice: treat empty sequence as an empty 1D array
-            return (0,)
+            first_shape: tuple[int, ...] | None = None
+            for item in x:
+                shp = _infer_shape_recursive(item, seen)
+                if shp is None:
+                    return None
+                if first_shape is None:
+                    first_shape = shp
+                elif shp != first_shape:
+                    return None
 
-        first_shape: tuple[int, ...] | None = None
-        for item in x:
-            shp = _infer_shape_recursive(item, seen)
-            if shp is None:
-                return None
-            if first_shape is None:
-                first_shape = shp
-            elif shp != first_shape:
-                return None
-
-        assert (
-            first_shape is not None
-        )  # n > 0 guarantees this, but helps the type checker
-
-        # first_shape is guaranteed to be a tuple here
-        return (n,) + first_shape
+            assert first_shape is not None  # n > 0 guarantees this
+            return (n,) + first_shape
+        finally:
+            seen.remove(oid)
 
     return None
 

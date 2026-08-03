@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "onearray"
+version = "0.0.1"
+description = "Backend-agnostic array utilities and numerical primitives"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+
+[project.optional-dependencies]
+numpy = ["numpy>=1.23"]
+torch = ["torch>=2"]
+test = ["numpy>=1.23", "pytest>=8"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
