@@ -1,10 +1,19 @@
+from __future__ import annotations
+
 from typing import Any
 from numbers import Number, Real
 from collections.abc import Callable, Sequence
-from .types import ArrayLike
 import math
-import numpy as np
-import torch
+
+from ._backend import (
+    numpy_array_types,
+    numpy_bool_types,
+    numpy_scalar_types,
+    require_numpy,
+    require_torch,
+    torch_tensor_types,
+)
+from .types import ArrayLike
 
 __all__ = [
     "is_numberlike",
@@ -47,10 +56,10 @@ def is_numberlike(x: Any) -> bool:
     ``numpy.timedelta64``) are rejected. Support for additional scalar types may be
     added in the future.
     """
-    return isinstance(x, Number) or isinstance(x, (np.number, np.bool_))
+    return isinstance(x, Number) or isinstance(x, numpy_scalar_types)
 
 
-def _is_numpy_numeric_or_bool_dtype(dtype: np.dtype) -> bool:
+def _is_numpy_numeric_or_bool_dtype(dtype: Any) -> bool:
     """
     Check whether a NumPy dtype is numeric or boolean.
 
@@ -64,10 +73,11 @@ def _is_numpy_numeric_or_bool_dtype(dtype: np.dtype) -> bool:
     bool
         True if the dtype is numeric or boolean; False otherwise.
     """
+    np = require_numpy()
     return np.issubdtype(dtype, np.number) or np.issubdtype(dtype, np.bool_)
 
 
-def _is_torch_numeric_or_bool_dtype(dtype: torch.dtype) -> bool:
+def _is_torch_numeric_or_bool_dtype(dtype: Any) -> bool:
     """
     Check whether a torch dtype is numeric or boolean.
 
@@ -86,6 +96,7 @@ def _is_torch_numeric_or_bool_dtype(dtype: torch.dtype) -> bool:
     Currently accepted torch dtypes include boolean, floating-point, complex, and
     integer types. Support for additional backends may be added in the future.
     """
+    torch = require_torch()
     if dtype == torch.bool:
         return True
     if dtype.is_floating_point:
@@ -127,9 +138,9 @@ def is_array(x: Any) -> bool:
     Currently supported array containers include NumPy ndarrays and torch Tensors.
     Support for additional backends may be added in the future.
     """
-    if isinstance(x, np.ndarray):
+    if isinstance(x, numpy_array_types):
         return _is_numpy_numeric_or_bool_dtype(x.dtype)
-    if isinstance(x, torch.Tensor):
+    if isinstance(x, torch_tensor_types):
         return _is_torch_numeric_or_bool_dtype(x.dtype)
     return False
 
@@ -226,19 +237,21 @@ def all_real_and(x: ArrayLike, predicate: Callable[[Any], Any]) -> bool:
         raise TypeError(f"Object of type {type(x).__name__} is not array-like")
 
     # ---- scalar ----
-    if isinstance(x, (bool, np.bool_)):
+    if isinstance(x, bool) or isinstance(x, numpy_bool_types):
         return False
     if isinstance(x, Real):
         return bool(math.isfinite(x) and predicate(x))
 
     # ---- NumPy ----
-    if isinstance(x, np.ndarray):
+    if isinstance(x, numpy_array_types):
+        np = require_numpy()
         if np.iscomplexobj(x) or x.dtype == np.bool_:
             return False
         return bool(np.all(np.isfinite(x) & predicate(x)))
 
     # ---- Torch ----
-    if isinstance(x, torch.Tensor):
+    if isinstance(x, torch_tensor_types):
+        torch = require_torch()
         if x.is_complex() or x.dtype == torch.bool:
             return False
 

@@ -1,14 +1,52 @@
-import numpy as np
-import torch
+from collections.abc import Sequence
+from numbers import Integral
+
+from ._backend import (
+    numpy_array_types,
+    require_numpy,
+    require_torch,
+    torch_tensor_types,
+)
 from .errors import ArrayError
-from . import checks
+from .validation import is_valid_array_mode
 
 __all__ = ["fft", "ifft", "fftfreq", "fftshift", "ifftshift"]
 
 
+def _normalize_fft_axes(axis, ndim):
+    if axis is None:
+        axes = tuple(range(ndim))
+    elif isinstance(axis, Integral):
+        axes = (axis,)
+    elif isinstance(axis, Sequence) and not isinstance(
+        axis, (str, bytes, bytearray, memoryview)
+    ):
+        axes = tuple(axis)
+    else:
+        raise TypeError("Axis must be an int or a sequence of ints")
+
+    normalized = []
+    for ax in axes:
+        if not isinstance(ax, Integral):
+            raise TypeError(
+                f"Axis entries must be integers, got {type(ax).__name__}"
+            )
+        original_ax = ax
+        if ax < 0:
+            ax += ndim
+        if ax < 0 or ax >= ndim:
+            raise ValueError(
+                f"Axis {original_ax} out of range for array with {ndim} dimensions"
+            )
+        normalized.append(int(ax))
+    if len(set(normalized)) != len(normalized):
+        raise ValueError("Axis entries must be unique")
+    return tuple(normalized)
+
+
 def fft(arr, axis=None):
     """
-    Compute the Fast Fourier Transform of the input array/tensor in 1D or 2D.
+    Compute the Fast Fourier Transform of the input array/tensor in 1D, 2D, or ND.
 
     Parameters
     ----------
@@ -27,29 +65,30 @@ def fft(arr, axis=None):
     TypeError
         If input is not a numpy array or torch tensor
     """
-    if not isinstance(arr, (np.ndarray, torch.Tensor)):
+    if not isinstance(arr, numpy_array_types + torch_tensor_types):
         raise TypeError("Input must be a numpy array or torch tensor")
 
-    if axis is None:
-        axis = tuple(range(arr.ndim))
+    axes = _normalize_fft_axes(axis, arr.ndim)
 
-    if isinstance(arr, np.ndarray):
-        return (
-            np.fft.fft2(arr, axes=axis)
-            if len(axis) == 2
-            else np.fft.fft(arr, axis=axis)
-        )
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
+        if len(axes) == 1:
+            return np.fft.fft(arr, axis=axes[0])
+        if len(axes) == 2:
+            return np.fft.fft2(arr, axes=axes)
+        return np.fft.fftn(arr, axes=axes)
     else:
-        return (
-            torch.fft.fft2(arr, dim=axis)
-            if len(axis) == 2
-            else torch.fft.fft(arr, dim=axis)
-        )
+        torch = require_torch()
+        if len(axes) == 1:
+            return torch.fft.fft(arr, dim=axes[0])
+        if len(axes) == 2:
+            return torch.fft.fft2(arr, dim=axes)
+        return torch.fft.fftn(arr, dim=axes)
 
 
 def ifft(arr, axis=None):
     """
-    Compute the Inverse Fast Fourier Transform of the input array/tensor in 1D or 2D.
+    Compute the Inverse Fast Fourier Transform of the input array/tensor in 1D, 2D, or ND.
 
     Parameters
     ----------
@@ -68,23 +107,24 @@ def ifft(arr, axis=None):
     TypeError
         If input is not a numpy array or torch tensor
     """
-    if not isinstance(arr, (np.ndarray, torch.Tensor)):
+    if not isinstance(arr, numpy_array_types + torch_tensor_types):
         raise TypeError("Input must be a numpy array or torch tensor")
 
-    if axis is None:
-        axis = tuple(range(arr.ndim))
-    if isinstance(arr, np.ndarray):
-        return (
-            np.fft.ifft2(arr, axes=axis)
-            if len(axis) == 2
-            else np.fft.ifft(arr, axis=axis)
-        )
+    axes = _normalize_fft_axes(axis, arr.ndim)
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
+        if len(axes) == 1:
+            return np.fft.ifft(arr, axis=axes[0])
+        if len(axes) == 2:
+            return np.fft.ifft2(arr, axes=axes)
+        return np.fft.ifftn(arr, axes=axes)
     else:
-        return (
-            torch.fft.ifft2(arr, dim=axis)
-            if len(axis) == 2
-            else torch.fft.ifft(arr, dim=axis)
-        )
+        torch = require_torch()
+        if len(axes) == 1:
+            return torch.fft.ifft(arr, dim=axes[0])
+        if len(axes) == 2:
+            return torch.fft.ifft2(arr, dim=axes)
+        return torch.fft.ifftn(arr, dim=axes)
 
 
 def fftfreq(n, d=1.0, mode="numpy"):
@@ -111,7 +151,7 @@ def fftfreq(n, d=1.0, mode="numpy"):
     ValueError
         If mode is not valid or dimensions don't match
     """
-    if not checks.is_valid_array_mode(mode):
+    if not is_valid_array_mode(mode):
         raise ValueError(ArrayError.INVALID_ARRAY_MODE.value)
 
     # Handle 2D case
@@ -123,16 +163,19 @@ def fftfreq(n, d=1.0, mode="numpy"):
             raise ValueError("For 2D, both n and d must be tuples of same length")
 
         if mode == "torch" or mode == "torch_cuda":
+            torch = require_torch()
             freqs = [fftfreq(ni, di, mode) for ni, di in zip(n, d)]
             freq_grid = torch.meshgrid(freqs, indexing="ij")
             return freq_grid
         else:
+            np = require_numpy()
             return np.meshgrid(
                 *(np.fft.fftfreq(ni, di) for ni, di in zip(n, d)), indexing="ij"
             )
 
     # Original 1D case
     if mode == "torch" or mode == "torch_cuda":
+        torch = require_torch()
         val = 1.0 / (n * d)
         results = torch.empty(n)
         N = (n - 1) // 2 + 1
@@ -141,6 +184,7 @@ def fftfreq(n, d=1.0, mode="numpy"):
         results = results * val
         return results.cuda() if mode == "torch_cuda" else results
     else:
+        np = require_numpy()
         return np.fft.fftfreq(n, d)
 
 
@@ -168,13 +212,15 @@ def fftshift(arr, axes=None):
     TypeError
         If input is not a numpy array or torch tensor
     """
-    if not isinstance(arr, (np.ndarray, torch.Tensor)):
+    if not isinstance(arr, numpy_array_types + torch_tensor_types):
         raise TypeError("Input must be a numpy array or torch tensor")
 
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return np.fft.fftshift(arr, axes=axes)
     else:
         # torch.fft.fftshift uses 'dim' instead of 'axes'
+        torch = require_torch()
         return torch.fft.fftshift(arr, dim=axes)
 
 
@@ -202,11 +248,13 @@ def ifftshift(arr, axes=None):
     TypeError
         If input is not a numpy array or torch tensor
     """
-    if not isinstance(arr, (np.ndarray, torch.Tensor)):
+    if not isinstance(arr, numpy_array_types + torch_tensor_types):
         raise TypeError("Input must be a numpy array or torch tensor")
 
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return np.fft.ifftshift(arr, axes=axes)
     else:
         # torch.fft.ifftshift uses 'dim' instead of 'axes'
+        torch = require_torch()
         return torch.fft.ifftshift(arr, dim=axes)

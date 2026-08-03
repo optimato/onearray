@@ -2,87 +2,14 @@ from __future__ import annotations
 
 from typing import Any
 from collections.abc import Sequence
-import numpy as np
 import builtins
-import torch
 
+from ._backend import numpy_array_types, torch_tensor_types
 from .validation import _is_string_like, is_array, is_numberlike
 from .errors import ArrayError
-from . import checks, convert
 
 
 __all__ = ["dim", "infer_shape"]
-
-
-def dim(arr):
-    """
-    Get the number of dimensions of the input array/tensor.
-    If the input is a nested array, return the number of dimensions of the innermost arrays plus one.
-
-    Parameters
-    ----------
-    arr : list, np.ndarray, or torch.Tensor
-        The input array or tensor.
-
-    Returns
-    -------
-    int
-        The number of dimensions of the input array or tensor.
-
-    Raises
-    ------
-    TypeError
-        If the input is not a list, numpy array, or torch tensor, or if the nested array structure is invalid.
-    """
-    if isinstance(arr, np.ndarray):
-        return arr.ndim
-    elif isinstance(arr, torch.Tensor):
-        return arr.ndim
-    elif isinstance(arr, list):
-        if checks.is_numeric_array(arr) or (
-            checks.is_array(arr) and not any(checks.is_array(x) for x in arr)
-        ):
-            return convert.array(arr).ndim
-        elif all(checks.is_array(x) for x in arr) and all(
-            dim(x) == dim(arr[0]) for x in arr
-        ):
-            return dim(arr[0]) + 1
-        else:
-            raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-    else:
-        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-
-
-def len(arr):
-    """
-    Get the length of the input array/tensor
-    If the input is a nested array, return the length of the outermost array.
-    If the input is a 1D array, return its length.
-    If the input is a multi-dimensional array, return the size of the first dimension.
-
-    Parameters
-    ----------
-    arr : list, np.ndarray, or torch.Tensor
-        The input array or tensor.
-
-    Returns
-    -------
-    int
-        The length of the input array or tensor.
-
-    Raises
-    ------
-    TypeError
-        If the input is not a list, numpy array, or torch tensor.
-    """
-    if isinstance(arr, np.ndarray):
-        return arr.shape[0]
-    elif isinstance(arr, torch.Tensor):
-        return arr.shape[0]
-    elif isinstance(arr, list):
-        return builtins.len(arr)
-    else:
-        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
 
 
 def infer_shape(x: Any) -> tuple[int, ...] | None:
@@ -162,3 +89,75 @@ def _infer_shape_recursive(x: Any, seen: set[int]) -> tuple[int, ...] | None:
         return (n,) + first_shape
 
     return None
+
+
+def dim(arr):
+    """
+    Get the number of dimensions of the input array/tensor.
+    If the input is a nested array, return the number of dimensions of the innermost arrays plus one.
+
+    Parameters
+    ----------
+    arr : ArrayLike
+        The input array-like object.
+
+    Returns
+    -------
+    int
+        The number of dimensions of the input array or tensor.
+
+    Raises
+    ------
+    TypeError
+        If the input is not array-like or the nested array structure is invalid.
+    """
+    if isinstance(arr, numpy_array_types):
+        return arr.ndim
+    elif isinstance(arr, torch_tensor_types):
+        return arr.ndim
+    elif is_numberlike(arr) and not isinstance(arr, Sequence):
+        return 0
+    elif isinstance(arr, Sequence):
+        shape = infer_shape(arr)
+        if shape is None:
+            raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+        return len(shape)
+    else:
+        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+
+
+def len(arr):
+    """
+    Get the length of the input array/tensor
+    If the input is a nested array, return the length of the outermost array.
+    If the input is a 1D array, return its length.
+    If the input is a multi-dimensional array, return the size of the first dimension.
+
+    Parameters
+    ----------
+    arr : ArrayLike
+        The input array-like object.
+
+    Returns
+    -------
+    int
+        The length of the input array or tensor.
+
+    Raises
+    ------
+    TypeError
+        If the input is not array-like.
+    """
+    if isinstance(arr, numpy_array_types):
+        return arr.shape[0]
+    elif isinstance(arr, torch_tensor_types):
+        return arr.shape[0]
+    elif is_numberlike(arr):
+        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+    elif isinstance(arr, Sequence):
+        shape = infer_shape(arr)
+        if shape is None:
+            raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+        return shape[0]
+    else:
+        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)

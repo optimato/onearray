@@ -1,9 +1,17 @@
 from typing import Any
-import numpy as np
-import torch
 from collections.abc import Sequence
 from numbers import Number
 import warnings
+
+from ._backend import (
+    numpy_array_types,
+    numpy_available,
+    require_numpy,
+    require_torch,
+    torch_available,
+    torch_tensor_types,
+)
+from .errors import ArrayError
 
 __all__ = [
     "is_numeric",
@@ -56,21 +64,30 @@ def is_array(arr: Any) -> bool:
         DeprecationWarning,
         stacklevel=2,
     )
-    return isinstance(arr, (list, np.ndarray, torch.Tensor))
+    return isinstance(arr, list) or isinstance(arr, numpy_array_types) or isinstance(
+        arr, torch_tensor_types
+    )
 
 
 def is_array_of(arr: Any, dtype: type) -> bool:
     """Check if the input is an array of a specific type"""
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return np.issubdtype(arr.dtype, dtype)
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
+        torch = require_torch()
         # Handle torch tensor types
-        if dtype in (int, np.int32, np.int64):
+        if dtype == int:
             return arr.dtype in (torch.int32, torch.int64)
-        elif dtype in (float, np.float32, np.float64):
+        if dtype == float:
             return arr.dtype in (torch.float32, torch.float64)
-        else:
-            return arr.dtype == dtype
+        if numpy_available():
+            np = require_numpy()
+            if dtype in (np.int32, np.int64):
+                return arr.dtype in (torch.int32, torch.int64)
+            if dtype in (np.float32, np.float64):
+                return arr.dtype in (torch.float32, torch.float64)
+        return arr.dtype == dtype
     elif isinstance(arr, list):
         return all(isinstance(i, dtype) for i in arr)
     else:
@@ -89,9 +106,11 @@ def is_numeric_array(arr: Any) -> bool:
         return all(isinstance(x, Number) for x in arr) or all(
             isinstance(x, list) and is_numeric_array(x) for x in arr
         )
-    elif isinstance(arr, np.ndarray):
+    elif isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return np.issubdtype(arr.dtype, np.number)
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
+        torch = require_torch()
         return torch.is_floating_point(arr) or arr.dtype in (torch.int32, torch.int64)
     else:
         return False
@@ -123,9 +142,11 @@ def is_positive_numeric_array(arr: Any) -> bool:
             return all(is_positive_numeric(x) for x in arr)
         else:
             return False
-    if isinstance(arr, np.ndarray):
+    if isinstance(arr, numpy_array_types):
+        np = require_numpy()
         return bool(np.all(arr >= 0))
-    elif isinstance(arr, torch.Tensor):
+    elif isinstance(arr, torch_tensor_types):
+        torch = require_torch()
         return bool(torch.all(arr >= 0).item())
     else:
         return False
@@ -134,20 +155,43 @@ def is_positive_numeric_array(arr: Any) -> bool:
 def array_equal(arr1, arr2) -> bool:
     """Helper function to compare arrays/tensors regardless of their type"""
     # Convert lists to numpy arrays first
-    if isinstance(arr1, Sequence) and not isinstance(arr1, (np.ndarray, torch.Tensor)):
-        arr1 = np.array(arr1)
-    if isinstance(arr2, Sequence) and not isinstance(arr2, (np.ndarray, torch.Tensor)):
-        arr2 = np.array(arr2)
+    if isinstance(arr1, Sequence) and not isinstance(
+        arr1, numpy_array_types + torch_tensor_types
+    ):
+        if numpy_available():
+            np = require_numpy()
+            arr1 = np.array(arr1)
+        elif torch_available():
+            torch = require_torch()
+            arr1 = torch.as_tensor(arr1)
+        else:
+            raise ModuleNotFoundError(ArrayError.NUMPY_NOT_AVAILABLE.value)
+    if isinstance(arr2, Sequence) and not isinstance(
+        arr2, numpy_array_types + torch_tensor_types
+    ):
+        if numpy_available():
+            np = require_numpy()
+            arr2 = np.array(arr2)
+        elif torch_available():
+            torch = require_torch()
+            arr2 = torch.as_tensor(arr2)
+        else:
+            raise ModuleNotFoundError(ArrayError.NUMPY_NOT_AVAILABLE.value)
 
-    if isinstance(arr1, torch.Tensor) and isinstance(arr2, torch.Tensor):
+    if isinstance(arr1, torch_tensor_types) and isinstance(arr2, torch_tensor_types):
+        torch = require_torch()
         return torch.equal(arr1, arr2)
-    elif isinstance(arr1, np.ndarray) and isinstance(arr2, np.ndarray):
+    elif isinstance(arr1, numpy_array_types) and isinstance(arr2, numpy_array_types):
+        np = require_numpy()
         return np.array_equal(arr1, arr2)
-    elif isinstance(arr1, torch.Tensor):
+    elif isinstance(arr1, torch_tensor_types):
+        torch = require_torch()
         return torch.equal(arr1, torch.as_tensor(arr2))
-    elif isinstance(arr2, torch.Tensor):
+    elif isinstance(arr2, torch_tensor_types):
+        torch = require_torch()
         return torch.equal(torch.as_tensor(arr1), arr2)
     else:
+        np = require_numpy()
         return np.array_equal(np.array(arr1), np.array(arr2))
 
 
