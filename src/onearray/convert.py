@@ -12,6 +12,13 @@ from .validation import is_array, is_array_like, is_numberlike, is_valid_array_m
 __all__ = ["add_axis", "array", "asarray", "to_list", "zeros_like"]
 
 
+def _numpy_for_torch(arr):
+    """Return NumPy storage that Torch can safely consume."""
+    if not arr.flags.writeable or any(stride < 0 for stride in arr.strides):
+        return arr.copy()
+    return arr
+
+
 def array(arr, mode="numpy"):
     """
     Convert input to numpy or torch tensor based on mode.
@@ -104,9 +111,7 @@ def asarray(arr, mode="numpy"):
     elif mode == "torch":
         torch = require_torch()
         if isinstance(arr, numpy_array_types):
-            if not arr.flags.writeable:
-                arr = arr.copy()
-            return torch.as_tensor(arr)
+            return torch.as_tensor(_numpy_for_torch(arr))
         elif isinstance(arr, Sequence) and not isinstance(arr, (str, bytes, bytearray)):
             # if not is_array_like(arr):
             #     raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
@@ -142,7 +147,7 @@ def asarray(arr, mode="numpy"):
         if not torch.cuda.is_available():
             raise RuntimeError(ArrayError.CUDA_NOT_AVAILABLE.value)
         if isinstance(arr, numpy_array_types):
-            return torch.as_tensor(arr, device="cuda")
+            return torch.as_tensor(_numpy_for_torch(arr), device="cuda")
         elif isinstance(arr, Sequence) and not isinstance(arr, (str, bytes, bytearray)):
             # if not is_array_like(arr):
             #     raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
