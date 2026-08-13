@@ -7,7 +7,7 @@ from ._backend import (
     torch_tensor_types,
 )
 from .errors import ArrayError
-from .validation import is_array, is_array_like, is_valid_array_mode
+from .validation import is_array, is_array_like, is_numberlike, is_valid_array_mode
 
 __all__ = ["add_axis", "array", "asarray", "to_list", "zeros_like"]
 
@@ -96,12 +96,16 @@ def asarray(arr, mode="numpy"):
             # if not is_array_like(arr):
             #     raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
             return np.asarray(arr)
+        elif is_numberlike(arr):
+            return np.asarray(arr)
         else:
             raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
 
     elif mode == "torch":
         torch = require_torch()
         if isinstance(arr, numpy_array_types):
+            if not arr.flags.writeable:
+                arr = arr.copy()
             return torch.as_tensor(arr)
         elif isinstance(arr, Sequence) and not isinstance(arr, (str, bytes, bytearray)):
             # if not is_array_like(arr):
@@ -128,6 +132,8 @@ def asarray(arr, mode="numpy"):
             return arr.cpu()
         elif isinstance(arr, torch_tensor_types):
             return arr
+        elif is_numberlike(arr):
+            return torch.as_tensor(arr)
         else:
             raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
 
@@ -162,6 +168,8 @@ def asarray(arr, mode="numpy"):
         elif isinstance(arr, torch_tensor_types):
             # Move the tensor to GPU
             return arr.cuda()
+        elif is_numberlike(arr):
+            return torch.as_tensor(arr, device="cuda")
         else:
             raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
 
