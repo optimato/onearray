@@ -43,7 +43,7 @@ def array(arr, mode="numpy"):
     elif isinstance(ret, torch_tensor_types):
         return ret.clone()
     else:
-        raise RuntimeError("Unexpected return type from asarray function")
+        raise TypeError("Unexpected return type from asarray function")
 
 
 def asarray(arr, mode="numpy"):
