@@ -38,6 +38,8 @@ docs_dir = "docs"
 # Read more: https://zensical.org/docs/setup/basics/#site_url
 site_url = "https://optimato.github.io/onearray/"
 
+repo_url = "https://github.com/optimato/onearray"
+
 # The copyright notice appears in the page footer and can contain an HTML
 # fragment.
 #
@@ -320,9 +322,9 @@ toggle.name = "Switch to light mode"
 # ----------------------------------------------------------------------------
 # The "extra" section contains miscellaneous settings.
 # ----------------------------------------------------------------------------
-#[[project.extra.social]]
-#icon = "fontawesome/brands/github"
-#link = "https://github.com/user/repo"
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/optimato/onearray"
 
 # ----------------------------------------------------------------------------
 # In this section you can configure the Markdown extensions that are used when
