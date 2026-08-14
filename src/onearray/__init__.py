@@ -48,7 +48,7 @@ from .checks import (
 
 from .shape import dim, len  # noqa: F401
 
-from .convert import array, add_axis, to_list, zeros_like
+from .convert import array, asarray, add_axis, to_list, zeros_like
 
 from .math import sum, exp, abs
 
@@ -69,7 +69,7 @@ __all__ = (
         "dim"  # len has been left out to avoid conflict with built-in len()
         # it can still be accessed via from array.shape import len
     ]
-    + ["array", "add_axis", "to_list", "zeros_like"]
+    + ["array", "asarray", "add_axis", "to_list", "zeros_like"]
     + ["sum", "exp", "abs"]
     + ["fft", "ifft", "fftfreq", "fftshift", "ifftshift"]
 )

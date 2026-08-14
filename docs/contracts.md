@@ -110,15 +110,13 @@ The package root currently exports the following functions:
   `is_array_of`, `is_numeric_array`, `is_positive_numeric_array`,
   `array_equal`, and `is_valid_array_mode`.
 - Shape: `dim`.
-- Conversion: `array`, `add_axis`, `to_list`, and `zeros_like`.
+- Conversion: `array`, `asarray`, `add_axis`, `to_list`, and `zeros_like`.
 - Mathematics: `sum`, `exp`, and `abs`.
 - Fourier: `fft`, `ifft`, `fftfreq`, `fftshift`, and `ifftshift`.
 
 `validation.py` exposes the newer validation vocabulary, but those functions are
 not currently exported from the package root. `shape.infer_shape` is declared in
 its module's public API but is also not exported from the package root.
-
-`asarray` is a planned conversion function and is not currently exported.
 
 The package root must export the new validation API in place of the deprecated
 checks. The exact public status of `infer_shape` remains to be decided.
@@ -186,6 +184,12 @@ root because it conflicts with Python's built-in `len`.
 
 ## Conversion contracts
 
+The conversion guarantees in this section cover dense NumPy arrays and dense
+strided PyTorch tensors. Specialized PyTorch layouts and views that cannot be
+exposed directly to NumPy, including sparse tensors and unresolved conjugate or
+negative-bit views, are outside the current conversion guarantee and may raise
+a backend error.
+
 ### `array(value, mode="numpy")`
 
 Intended role: normalize an array-like value into an array container for the
@@ -193,9 +197,7 @@ selected backend mode.
 
 `array` accepts every valid array-like value, including number-like scalars. A
 scalar input produces a zero-dimensional array container on the selected
-backend. The current implementation validates scalars successfully and then
-rejects them during backend conversion; this is an implementation-contract
-mismatch that must be corrected.
+backend.
 
 The result owns storage independently from the input. Mutating the result must
 not mutate an input array container, and mutating an input array container must
@@ -220,6 +222,8 @@ or shares existing storage whenever the target backend and device permit it.
   between those backends.
 - A read-only NumPy array is copied when converted to PyTorch so that writable
   tensor access cannot modify storage presented as read-only by NumPy.
+- A NumPy array with negative strides is copied when converted to PyTorch,
+  because PyTorch cannot consume that layout directly.
 - A device transfer necessarily allocates new storage.
 - Converting a scalar or Python sequence necessarily allocates array storage.
 - When sharing is unsupported for a dtype, layout, or backend combination,
@@ -297,20 +301,16 @@ The detailed numerical contracts must subsequently define:
 
 These are observations, not adopted contracts:
 
-1. `NumberLike` and `is_array_like` include scalars, but `array` currently
-   rejects scalar conversion.
-2. The package root exports deprecated checks instead of the required new
+1. The package root exports deprecated checks instead of the required new
    validation API.
-3. Deprecated `checks.is_array` considers any list an array, whereas
+2. Deprecated `checks.is_array` considers any list an array, whereas
    `validation.is_array` accepts only backend containers with supported dtypes.
-4. Deprecated "positive" checks mean nonnegative; the new validation API
+3. Deprecated "positive" checks mean nonnegative; the new validation API
    distinguishes positive from nonnegative.
-5. `ArrayError.INVALID_ARRAY_TYPE` says an input must be a list, NumPy array, or
+4. `ArrayError.INVALID_ARRAY_TYPE` says an input must be a list, NumPy array, or
    tensor, which conflicts with the `ArrayLike` definition and tuple support.
-6. Some function documentation uses "array-like" where the function is required
+5. Some function documentation uses "array-like" where the function is required
    to accept array containers only.
-7. `array` currently returns some same-backend inputs unchanged, which conflicts
-   with its independent-storage contract.
 
 ## Turning contracts into tests
 

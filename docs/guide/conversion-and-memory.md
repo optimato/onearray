@@ -7,6 +7,12 @@ move between NumPy and PyTorch.
 Conversion is always explicit. It may select a different backend, move data to
 another device, or create storage that is independent from the input.
 
+!!! note "Conversion guarantees"
+    The guarantees in this guide apply to dense NumPy arrays and dense strided
+    PyTorch tensors. Specialized PyTorch layouts and views that NumPy cannot
+    expose directly—such as sparse tensors and unresolved conjugate or
+    negative-bit views—may raise a backend error during conversion.
+
 ## Choosing a backend
 
 The `mode` argument selects the result's backend and device:
@@ -49,11 +55,6 @@ result[0] = 10
 assert source[0] == 1
 ```
 
-!!! warning
-    This is the intended contract. Some development versions of OneArray still
-    return certain same-backend inputs unchanged; that behavior will be corrected
-    before the API is considered stable.
-
 ## Shared memory
 
 Two arrays share memory when they refer to the same underlying data. A change
@@ -70,15 +71,11 @@ assert source[0] == 10
 Sharing avoids an allocation and can be useful for large arrays, but it also
 couples the two objects. Code that requires isolation should use `array`.
 
-## Planned API: `asarray`
+## Shared conversion with `asarray`
 
-!!! warning
-    `asarray` is not available yet. The behavior described here is the accepted
-    design for the future API.
-
-`asarray(value, mode)` will accept the same inputs and modes as `array`. The
-difference is that it will reuse the input object or share its storage when that
-can be done safely. When sharing is not possible, it will create a copy.
+`asarray(value, mode)` accepts the same inputs and modes as `array`. The
+difference is that it reuses the input object or shares its storage when that
+can be done safely. When sharing is not possible, it creates a copy.
 
 ```python
 source = np.array([1, 2, 3])
@@ -114,7 +111,8 @@ share.
 
 Some dtypes and memory layouts cannot be shared between NumPy and PyTorch. In
 those cases, `asarray` copies rather than failing solely because sharing is
-unavailable.
+unavailable. In particular, NumPy arrays with negative strides, such as a
+reversed view created by `source[::-1]`, are copied when converted to PyTorch.
 
 ## Read-only NumPy arrays
 
