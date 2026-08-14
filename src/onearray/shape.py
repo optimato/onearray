@@ -8,7 +8,6 @@ from ._backend import numpy_array_types, torch_tensor_types
 from .validation import _is_string_like, is_array, is_numberlike
 from .errors import ArrayError
 
-
 __all__ = ["dim", "infer_shape"]
 
 

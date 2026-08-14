@@ -11,7 +11,9 @@ from onearray.validation import (  # noqa: E402
 )
 
 
-@pytest.mark.parametrize("dtype", [torch.bool, torch.int64, torch.float32, torch.complex64])
+@pytest.mark.parametrize(
+    "dtype", [torch.bool, torch.int64, torch.float32, torch.complex64]
+)
 def test_torch_numeric_and_boolean_tensors_are_arrays(dtype):
     tensor = torch.tensor([0, 1], dtype=dtype)
     assert is_array(tensor)
@@ -33,8 +35,6 @@ def test_torch_boolean_and_complex_values_are_not_real(dtype):
     assert not is_real(torch.tensor([1], dtype=dtype))
 
 
-@pytest.mark.parametrize(
-    "predicate", [is_real, is_real_positive, is_real_nonnegative]
-)
+@pytest.mark.parametrize("predicate", [is_real, is_real_positive, is_real_nonnegative])
 def test_torch_real_predicates_accept_empty_tensors(predicate):
     assert predicate(torch.tensor([]))

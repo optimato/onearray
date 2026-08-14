@@ -1,8 +1,8 @@
 """
 OneArray: Backend-agnostic array utilities and numerical primitives.
 
-This package provides a unified interface for working with array containers 
-across multiple numerical backends, while enforcing a consistent set of shape 
+This package provides a unified interface for working with array containers
+across multiple numerical backends, while enforcing a consistent set of shape
 and dtype invariants.
 
 The following concepts are central to OneArray:

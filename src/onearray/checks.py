@@ -64,8 +64,10 @@ def is_array(arr: Any) -> bool:
         DeprecationWarning,
         stacklevel=2,
     )
-    return isinstance(arr, list) or isinstance(arr, numpy_array_types) or isinstance(
-        arr, torch_tensor_types
+    return (
+        isinstance(arr, list)
+        or isinstance(arr, numpy_array_types)
+        or isinstance(arr, torch_tensor_types)
     )
 
 

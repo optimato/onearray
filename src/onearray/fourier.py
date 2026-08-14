@@ -28,9 +28,7 @@ def _normalize_fft_axes(axis, ndim):
     normalized = []
     for ax in axes:
         if not isinstance(ax, Integral):
-            raise TypeError(
-                f"Axis entries must be integers, got {type(ax).__name__}"
-            )
+            raise TypeError(f"Axis entries must be integers, got {type(ax).__name__}")
         original_ax = ax
         if ax < 0:
             ax += ndim
