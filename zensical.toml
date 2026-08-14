@@ -39,6 +39,7 @@ docs_dir = "docs"
 site_url = "https://optimato.github.io/onearray/"
 
 repo_url = "https://github.com/optimato/onearray"
+edit_uri = "edit/main/docs/"
 
 # The copyright notice appears in the page footer and can contain an HTML
 # fragment.
