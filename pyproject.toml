@@ -1,11 +1,11 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=9.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "onearray"
-version = "0.0.1"
-description = "Backend-agnostic array utilities and numerical primitives"
+dynamic = ["version"]
+description = "Backend-agnostic array utilities for NumPy and PyTorch."
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
