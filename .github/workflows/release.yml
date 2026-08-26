@@ -26,6 +26,9 @@ jobs:
         run: python -m pip install --upgrade build twine
 
       - name: Build distribution
+        env:
+          SETUPTOOLS_SCM_OVERRIDES_FOR_ONEARRAY: >-
+            {local_scheme = "no-local-version-strict"}
         run: python -m build
 
       - name: Check distribution
