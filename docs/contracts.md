@@ -104,22 +104,16 @@ number of entries in that tuple.
 
 ## Public API surface
 
-The package root currently exports the following functions:
+The package root exports the following functions:
 
-- Deprecated checks: `is_numeric`, `is_positive_numeric`, `is_array`,
-  `is_array_of`, `is_numeric_array`, `is_positive_numeric_array`,
-  `array_equal`, and `is_valid_array_mode`.
 - Shape: `dim`.
 - Conversion: `array`, `asarray`, `add_axis`, `to_list`, and `zeros_like`.
 - Mathematics: `sum`, `exp`, and `abs`.
 - Fourier: `fft`, `ifft`, `fftfreq`, `fftshift`, and `ifftshift`.
 
-`validation.py` exposes the newer validation vocabulary, but those functions are
-not currently exported from the package root. `shape.infer_shape` is declared in
-its module's public API but is also not exported from the package root.
-
-The package root must export the new validation API in place of the deprecated
-checks. The exact public status of `infer_shape` remains to be decided.
+Validation functions are available from `onearray.validation`. `infer_shape` is
+available from `onearray.shape`; neither module's API is re-exported from the
+package root.
 
 Deprecated checks may remain temporarily as compatibility shims, but supported
 OneArray code must never call them. Internal code must use the new validation
@@ -301,15 +295,13 @@ The detailed numerical contracts must subsequently define:
 
 These are observations, not adopted contracts:
 
-1. The package root exports deprecated checks instead of the required new
-   validation API.
-2. Deprecated `checks.is_array` considers any list an array, whereas
+1. Deprecated `checks.is_array` considers any list an array, whereas
    `validation.is_array` accepts only backend containers with supported dtypes.
-3. Deprecated "positive" checks mean nonnegative; the new validation API
+2. Deprecated "positive" checks mean nonnegative; the new validation API
    distinguishes positive from nonnegative.
-4. `ArrayError.INVALID_ARRAY_TYPE` says an input must be a list, NumPy array, or
+3. `ArrayError.INVALID_ARRAY_TYPE` says an input must be a list, NumPy array, or
    tensor, which conflicts with the `ArrayLike` definition and tuple support.
-5. Some function documentation uses "array-like" where the function is required
+4. Some function documentation uses "array-like" where the function is required
    to accept array containers only.
 
 ## Turning contracts into tests
@@ -331,8 +323,7 @@ but such a test must be labelled accordingly.
 Continue the review in this order because later contracts depend on earlier
 ones:
 
-1. Decide whether `infer_shape` belongs in the package-root API and define the
-   deprecated-check removal schedule.
+1. Define the deprecated-check removal schedule.
 2. Resolve the remaining conversion decisions: backend availability, gradient
    detachment, axes, sequences containing containers, and preserved metadata.
 3. Define individual mathematical and Fourier contracts under the settled

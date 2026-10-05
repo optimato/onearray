@@ -35,17 +35,6 @@ downstream code may assume it operates on well-formed array containers with
 predictable shape and dtype behavior, independent of the underlying backend.
 """
 
-from .checks import (
-    is_numeric,
-    is_positive_numeric,
-    is_array,
-    is_array_of,
-    is_numeric_array,
-    is_positive_numeric_array,
-    array_equal,
-    is_valid_array_mode,
-)
-
 from .shape import dim, len  # noqa: F401
 
 from .convert import array, asarray, add_axis, to_list, zeros_like
@@ -56,16 +45,6 @@ from .fourier import fft, ifft, fftfreq, fftshift, ifftshift
 
 __all__ = (
     [
-        "is_numeric",
-        "is_positive_numeric",
-        "is_array",
-        "is_array_of",
-        "is_numeric_array",
-        "is_positive_numeric_array",
-        "array_equal",
-        "is_valid_array_mode",
-    ]
-    + [
         "dim"  # len has been left out to avoid conflict with built-in len()
         # it can still be accessed via from array.shape import len
     ]
