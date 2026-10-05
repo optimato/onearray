@@ -14,6 +14,7 @@ license = "MIT"
 numpy = ["numpy>=1.23"]
 torch = ["torch>=2"]
 test = ["numpy>=1.23", "pytest>=8"]
+lint = ["black==26.10.0", "ruff==0.16.10"]
 
 [tool.setuptools.packages.find]
 where = ["src"]
@@ -22,3 +23,6 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-ra"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]

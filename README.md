@@ -1,6 +1,8 @@
 # OneArray
 
 [![Code style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Lint](https://github.com/optimato/onearray/actions/workflows/lint.yml/badge.svg)](https://github.com/optimato/onearray/actions/workflows/lint.yml)
+[![Tests](https://github.com/optimato/onearray/actions/workflows/tests.yml/badge.svg)](https://github.com/optimato/onearray/actions/workflows/tests.yml)
 [![Documentation](https://img.shields.io/badge/docs-online-blue.svg)](https://optimato.github.io/onearray/)
 [![Python](https://img.shields.io/badge/python-%E2%89%A53.10-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
