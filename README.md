@@ -13,6 +13,13 @@ OneArray lets you write numerical code once and use it with either NumPy arrays
 or PyTorch tensors. Operations dispatch from the input type and return values in
 the same backend—there is no wrapper array class to learn.
 
+## Alpha status
+
+`v0.1.0a1` is an early release intended to gather feedback. The most useful
+reports cover API ergonomics, NumPy/PyTorch behavior differences, conversion
+semantics, and operations you need but cannot express yet. Please report them
+in [GitHub Issues](https://github.com/optimato/onearray/issues).
+
 ## Installation
 
 OneArray requires Python 3.10 or newer. Install it with the backend you need:
