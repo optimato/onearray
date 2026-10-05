@@ -1,4 +1,5 @@
 from collections.abc import Sequence
+from numbers import Integral
 
 from ._backend import (
     numpy_array_types,
@@ -191,7 +192,8 @@ def add_axis(arr, *axes):
     arr : np.ndarray or torch.Tensor
         The input array or tensor.
     *axes : int
-        Variable number of integer positions where to add new axes.
+        Unique axis positions in the final result. All positions must be
+        nonnegative or all negative.
     Returns
     -------
     np.ndarray or torch.Tensor
@@ -202,20 +204,18 @@ def add_axis(arr, *axes):
     TypeError
         If the input is not a numpy array or torch tensor.
     ValueError
-        If the input array is not a valid shape.
-    ValueError
-        If the number of axes is too large.
+        If the axes are mixed-sign, duplicated, or out of range.
 
 
     Examples
     --------
     >>> import numpy as np
     >>> x = np.array([1, 2, 3])
-    >>> _add_axis(x, 1)  # equivalent to x[:, np.newaxis]
+    >>> add_axis(x, 1)  # equivalent to x[:, np.newaxis]
     array([[1],
            [2],
            [3]])
-    >>> _add_axis(x, 0, 2)  # equivalent to x[np.newaxis, :, np.newaxis]
+    >>> add_axis(x, 0, 2)  # equivalent to x[np.newaxis, :, np.newaxis]
     array([[[1],
             [2],
             [3]]])
@@ -225,16 +225,31 @@ def add_axis(arr, *axes):
     if not (is_numpy or is_torch):
         raise TypeError("Input must be a numpy array or torch tensor")
 
-    if max(axes) >= len(axes) + arr.ndim:
-        raise ValueError("Too many dimensions")
+    if not axes:
+        return arr.copy() if is_numpy else arr.clone()
 
-    # Sort axes in descending order to avoid shifting positions
-    if all(x >= 0 for x in axes):
-        axes = sorted(axes)  # , reverse=True)
-    elif all(x < 0 for x in axes):
-        axes = sorted(axes, reverse=True)
-    else:
-        raise ValueError("All axes must be either positive or negative")
+    if any(
+        not isinstance(axis, Integral) or isinstance(axis, bool) for axis in axes
+    ):
+        raise TypeError("Axis positions must be integers")
+
+    if not (all(axis >= 0 for axis in axes) or all(axis < 0 for axis in axes)):
+        raise ValueError(
+            "Axis positions must be either all nonnegative or all negative"
+        )
+
+    final_ndim = arr.ndim + len(axes)
+    normalized_axes = tuple(
+        int(axis) if axis >= 0 else final_ndim + int(axis) for axis in axes
+    )
+    if any(axis < 0 or axis >= final_ndim for axis in normalized_axes):
+        raise ValueError(
+            f"Axis position out of range for result with {final_ndim} dimensions"
+        )
+    if len(set(normalized_axes)) != len(normalized_axes):
+        raise ValueError("Axis positions must be unique")
+
+    axes = sorted(normalized_axes)
 
     # Create a copy to avoid modifying the original
     if is_numpy:
