@@ -228,9 +228,7 @@ def add_axis(arr, *axes):
     if not axes:
         return arr.copy() if is_numpy else arr.clone()
 
-    if any(
-        not isinstance(axis, Integral) or isinstance(axis, bool) for axis in axes
-    ):
+    if any(not isinstance(axis, Integral) or isinstance(axis, bool) for axis in axes):
         raise TypeError("Axis positions must be integers")
 
     if not (all(axis >= 0 for axis in axes) or all(axis < 0 for axis in axes)):

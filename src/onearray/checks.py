@@ -79,9 +79,9 @@ def is_array_of(arr: Any, dtype: type) -> bool:
     elif isinstance(arr, torch_tensor_types):
         torch = require_torch()
         # Handle torch tensor types
-        if dtype == int:
+        if dtype is int:
             return arr.dtype in (torch.int32, torch.int64)
-        if dtype == float:
+        if dtype is float:
             return arr.dtype in (torch.float32, torch.float64)
         if numpy_available():
             np = require_numpy()

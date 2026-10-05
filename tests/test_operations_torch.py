@@ -1,8 +1,8 @@
 import pytest
 
-torch = pytest.importorskip("torch")
-
 import onearray as oa
+
+torch = pytest.importorskip("torch")
 
 
 def test_conversion_and_axis_helpers_preserve_torch_backend():
