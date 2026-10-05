@@ -244,25 +244,29 @@ nested Python lists. A zero-dimensional input produces a Python scalar rather
 than a one-element list. GPU tensors are detached and transferred to CPU before
 conversion.
 
-**Decision required CONV-2:** Confirm whether detaching a tensor that requires
-gradients is intended public behavior.
+Detaching a tensor that requires gradients is an intentional part of the
+conversion contract. The resulting Python values and NumPy arrays do not
+participate in the original PyTorch computation graph.
 
 ### `add_axis(array, *axes)`
 
 Currently accepts array containers only and returns a new container on the same
 backend. It does not mutate the input.
 
-**Decision required CONV-3:** Specify valid axis normalization, duplicate axes,
-the zero-axis call, mixed positive and negative axes, and the exception for each
-invalid case.
+With no axis positions, it returns an independent copy of the input. Otherwise,
+each position must be a unique integer position in the final result. Positions
+must be either all nonnegative or all negative; negative positions are
+normalized against the final number of dimensions. Mixed-sign, duplicate, and
+out-of-range positions raise `ValueError`; non-integer positions raise
+`TypeError`.
 
 ### `zeros_like(array)`
 
 Accepts an array container and returns a zero-filled container with the same
-backend, shape, and dtype. For PyTorch it should also preserve the device.
+backend, shape, and dtype. For PyTorch it also preserves the device.
 
-**Decision required CONV-4:** Specify whether layout, gradient flags, and other
-backend-specific metadata are part of the preservation contract.
+No preservation guarantee is made for gradient flags, layouts, or other
+backend-specific metadata.
 
 ## Numerical API policy
 
