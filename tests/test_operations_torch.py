@@ -33,3 +33,24 @@ def test_math_and_fourier_helpers_preserve_torch_backend():
     transformed = oa.fft(source)
     assert isinstance(transformed, torch.Tensor)
     assert torch.allclose(oa.ifft(transformed).real, source)
+
+
+def test_multidimensional_fftfreq_preserves_torch_meshgrid_container():
+    result = oa.fftfreq((2, 3), d=(0.5, 1.0), mode="torch")
+    expected = torch.meshgrid(
+        torch.fft.fftfreq(2, 0.5), torch.fft.fftfreq(3, 1.0), indexing="ij"
+    )
+
+    assert isinstance(result, tuple)
+    assert len(result) == len(expected)
+    assert all(
+        torch.equal(actual, expected_component)
+        for actual, expected_component in zip(result, expected)
+    )
+
+
+def test_fftfreq_cuda_mode_checks_cuda_availability(monkeypatch):
+    monkeypatch.setattr(torch.cuda, "is_available", lambda: False)
+
+    with pytest.raises(RuntimeError, match="torch_cuda"):
+        oa.fftfreq(4, mode="torch_cuda")

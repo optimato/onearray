@@ -38,3 +38,15 @@ def test_fft_helpers_match_numpy_for_axes_and_shifts():
 
 def test_fftfreq_matches_numpy():
     np.testing.assert_allclose(oa.fftfreq(4, d=0.5), np.fft.fftfreq(4, d=0.5))
+
+
+def test_multidimensional_fftfreq_preserves_numpy_meshgrid_container():
+    result = oa.fftfreq((2, 3), d=(0.5, 1.0), mode="numpy")
+    expected = np.meshgrid(
+        np.fft.fftfreq(2, 0.5), np.fft.fftfreq(3, 1.0), indexing="ij"
+    )
+
+    assert type(result) is type(expected)
+    assert len(result) == len(expected)
+    for actual, expected_component in zip(result, expected):
+        np.testing.assert_allclose(actual, expected_component)

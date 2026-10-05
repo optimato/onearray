@@ -128,12 +128,11 @@ def ifft(arr, axis=None):
 def fftfreq(n, d=1.0, mode="numpy"):
     """
     Return the Discrete Fourier Transform sample frequencies.
-    Works in 1D or 2D.
 
     Parameters
     ----------
     n: int or tuple of int
-        Window length or shape for 2D
+        Window length or shape for a multidimensional grid.
     d: float or tuple of float, optional
         Sample spacing (inverse of sampling rate), by default 1.0
     mode: str, optional
@@ -141,16 +140,24 @@ def fftfreq(n, d=1.0, mode="numpy"):
 
     Returns
     -------
-    np.ndarray or torch.Tensor
-        Array of frequencies with specified type
+    np.ndarray, torch.Tensor, or a native backend ``meshgrid`` result
+        For scalar ``n``, a frequency array with the selected backend. For a
+        tuple ``n``, the native backend result of ``meshgrid``.
 
     Raises
     ------
     ValueError
         If mode is not valid or dimensions don't match
+    RuntimeError
+        If ``mode="torch_cuda"`` is requested without CUDA support.
     """
     if not is_valid_array_mode(mode):
         raise ValueError(ArrayError.INVALID_ARRAY_MODE.value)
+
+    if mode == "torch_cuda":
+        torch = require_torch()
+        if not torch.cuda.is_available():
+            raise RuntimeError(ArrayError.CUDA_NOT_AVAILABLE.value)
 
     # Handle 2D case
     if isinstance(n, tuple):

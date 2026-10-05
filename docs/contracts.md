@@ -295,6 +295,11 @@ The detailed numerical contracts must subsequently define:
 - error categories for invalid inputs;
 - behavior when an optional backend is unavailable.
 
+`fftfreq(n, d, mode)` is a construction helper and follows the native backend
+return type for multidimensional grids. A scalar `n` returns one NumPy array or
+PyTorch tensor. A tuple `n` returns the backend's `meshgrid` result. Requesting
+`mode="torch_cuda"` without CUDA support raises `RuntimeError`.
+
 ## Known inconsistencies
 
 These are observations, not adopted contracts:

@@ -124,5 +124,17 @@ Numerical operations never convert their inputs or choose a backend on the
 caller's behalf. This keeps allocation and data movement explicit while allowing
 the numerical code itself to remain backend-independent.
 
+## Frequency grids
+
+`fftfreq` creates frequency coordinates for a selected backend. With a scalar
+window length, it returns one frequency array or tensor. With a tuple shape, it
+returns the native backend `meshgrid` result. OneArray preserves that native
+container type rather than normalizing it.
+
+```python
+numpy_grid = oa.fftfreq((3, 4), mode="numpy")
+torch_grid = oa.fftfreq((3, 4), mode="torch")
+```
+
 See [Conversion and memory](conversion-and-memory.md) for the rules governing
 backend conversion, copying, and shared storage.
