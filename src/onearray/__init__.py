@@ -46,7 +46,7 @@ from .fourier import fft, ifft, fftfreq, fftshift, ifftshift
 __all__ = (
     [
         "dim"  # len has been left out to avoid conflict with built-in len()
-        # it can still be accessed via from array.shape import len
+        # it can still be accessed via from onearray.shape import len
     ]
     + ["array", "asarray", "add_axis", "to_list", "zeros_like"]
     + ["sum", "exp", "abs"]

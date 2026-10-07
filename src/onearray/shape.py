@@ -7,7 +7,7 @@ import builtins
 from .validation import _is_string_like, is_array, is_numberlike
 from .errors import ArrayError
 
-__all__ = ["dim", "infer_shape"]
+__all__ = ["dim", "infer_shape", "len"]
 
 
 def infer_shape(x: Any) -> tuple[int, ...] | None:
