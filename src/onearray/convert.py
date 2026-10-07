@@ -116,7 +116,7 @@ def asarray(arr, mode="numpy"):
         elif isinstance(arr, Sequence) and not isinstance(arr, (str, bytes, bytearray)):
             # if not is_array_like(arr):
             #     raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
-            if all(is_array(x) for x in arr):
+            if len(arr) > 0 and all(is_array(x) for x in arr):
                 return torch.stack(
                     [
                         (
@@ -152,7 +152,7 @@ def asarray(arr, mode="numpy"):
         elif isinstance(arr, Sequence) and not isinstance(arr, (str, bytes, bytearray)):
             # if not is_array_like(arr):
             #     raise ValueError(ArrayError.INVALID_ARRAY_TYPE.value)
-            if all(is_array(x) for x in arr):
+            if len(arr) > 0 and all(is_array(x) for x in arr):
                 return torch.stack(
                     [
                         (

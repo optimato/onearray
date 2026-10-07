@@ -59,6 +59,11 @@ For example:
 ((1, 2), (3, 4))
 ```
 
+Supported scalars are Python `bool`, `int`, `float`, and `complex`, plus NumPy
+numeric and boolean scalars. Convert other numeric types, such as `Fraction`
+and `Decimal`, explicitly before passing them to OneArray. Datetime and
+timedelta values are not supported.
+
 A scalar such as `3.0` is number-like and has shape `()`, but it is not an array
 container until it is converted. Likewise, a Python list can describe an array
 without belonging to NumPy or PyTorch.

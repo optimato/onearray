@@ -72,3 +72,17 @@ def test_real_predicates_reject_boolean_and_complex_values(value):
 def test_real_predicates_raise_for_non_array_like_values():
     with pytest.raises(TypeError):
         is_real([1, "two"])
+
+
+@pytest.mark.parametrize("dtype", [bool, complex, float, int])
+@pytest.mark.parametrize("predicate", [is_real, is_real_positive, is_real_nonnegative])
+def test_empty_numpy_arrays_satisfy_real_predicates(dtype, predicate):
+    assert predicate(np.empty((2, 0), dtype=dtype))
+
+
+def test_timedelta_values_are_not_numeric():
+    scalar = np.timedelta64(1, "D")
+    assert not is_numberlike(scalar)
+    assert not is_array_like(scalar)
+    assert not is_array(np.array([scalar]))
+    assert not is_array_like(np.array([scalar]))

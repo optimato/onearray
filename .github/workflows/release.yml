@@ -41,12 +41,20 @@ jobs:
   pytest-torch:
     name: Tests (PyTorch)
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - python: "3.10"
+            dependencies: '"numpy==1.23.0" "torch==2.0.0"'
+          - python: "3.12"
+            dependencies: 'numpy torch'
 
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install ${{ matrix.dependencies }}
       - run: python -m pip install --editable ".[test,torch]"
       - run: python -m pytest
 
@@ -64,7 +72,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.x"
+          python-version: "3.12"
 
       - name: Install build tools
         run: python -m pip install --upgrade build twine
@@ -77,6 +85,13 @@ jobs:
 
       - name: Check distribution
         run: python -m twine check dist/*
+
+      - name: Test installed wheel outside the checkout
+        run: |
+          python -m pip install dist/*.whl numpy pytest torch
+          cp -r tests "$RUNNER_TEMP/onearray-tests"
+          cd "$RUNNER_TEMP"
+          python -m pytest -c /dev/null onearray-tests
 
       - name: Upload distribution artifacts
         uses: actions/upload-artifact@v4

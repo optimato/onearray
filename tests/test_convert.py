@@ -86,3 +86,17 @@ def test_add_axis_inserts_at_final_positions(axes, expected_shape):
 def test_add_axis_rejects_invalid_positions(axes, error):
     with pytest.raises(error):
         oa.add_axis(np.zeros((2, 3)), *axes)
+
+
+@pytest.mark.parametrize("factory", [oa.array, oa.asarray])
+def test_custom_numeric_types_require_explicit_conversion(factory):
+    from fractions import Fraction
+    from decimal import Decimal
+    from onearray.validation import is_array_like
+
+    for value in (Fraction(1, 2), Decimal("0.5")):
+        assert not is_array_like(value)
+        for input_value in (value, [value]):
+            with pytest.raises(ValueError):
+                factory(input_value)
+        assert factory(float(value)).item() == 0.5

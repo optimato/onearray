@@ -4,7 +4,6 @@ from typing import Any
 from collections.abc import Sequence
 import builtins
 
-from ._backend import numpy_array_types, torch_tensor_types
 from .validation import _is_string_like, is_array, is_numberlike
 from .errors import ArrayError
 
@@ -108,19 +107,10 @@ def dim(arr):
     TypeError
         If the input is not array-like or the nested array structure is invalid.
     """
-    if isinstance(arr, numpy_array_types):
-        return arr.ndim
-    elif isinstance(arr, torch_tensor_types):
-        return arr.ndim
-    elif is_numberlike(arr) and not isinstance(arr, Sequence):
-        return 0
-    elif isinstance(arr, Sequence):
-        shape = infer_shape(arr)
-        if shape is None:
-            raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-        return len(shape)
-    else:
+    shape = infer_shape(arr)
+    if shape is None:
         raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+    return builtins.len(shape)
 
 
 def len(arr):
@@ -143,18 +133,9 @@ def len(arr):
     Raises
     ------
     TypeError
-        If the input is not array-like.
+        If the input is scalar or not array-like.
     """
-    if isinstance(arr, numpy_array_types):
-        return arr.shape[0]
-    elif isinstance(arr, torch_tensor_types):
-        return arr.shape[0]
-    elif is_numberlike(arr):
-        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-    elif isinstance(arr, Sequence):
-        shape = infer_shape(arr)
-        if shape is None:
-            raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
-        return shape[0]
-    else:
-        raise TypeError(ArrayError.INVALID_ARRAY_TYPE.value)
+    shape = infer_shape(arr)
+    if shape is None or not shape:
+        raise TypeError("Expected a non-scalar array-like value")
+    return shape[0]

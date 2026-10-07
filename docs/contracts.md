@@ -36,9 +36,11 @@ A **number-like** value is a scalar numeric or boolean value.
 It currently includes:
 
 - Python `bool`, `int`, `float`, and `complex` values;
-- other implementations of `numbers.Number`;
 - NumPy numeric scalar values;
 - NumPy boolean scalar values.
+
+Other implementations of `numbers.Number` require explicit conversion to a
+supported scalar type.
 
 It excludes string, bytes, datetime, timedelta, and other non-numeric scalar
 types.

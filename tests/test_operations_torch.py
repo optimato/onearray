@@ -54,3 +54,22 @@ def test_fftfreq_cuda_mode_checks_cuda_availability(monkeypatch):
 
     with pytest.raises(RuntimeError, match="torch_cuda"):
         oa.fftfreq(4, mode="torch_cuda")
+
+
+@pytest.mark.parametrize("factory", [oa.array, oa.asarray])
+@pytest.mark.parametrize("value", [[], (), [[], []]])
+@pytest.mark.parametrize("mode", ["torch", "torch_cuda"])
+def test_empty_sequences_convert_to_torch(factory, value, mode):
+    if mode == "torch_cuda" and not torch.cuda.is_available():
+        pytest.skip("CUDA unavailable")
+    result = factory(value, mode=mode)
+    assert result.numel() == 0
+    assert tuple(result.shape) == ((2, 0) if value == [[], []] else (0,))
+    assert result.device.type == ("cuda" if mode == "torch_cuda" else "cpu")
+
+
+def test_scalar_tensor_has_no_length():
+    from onearray.shape import len as array_len
+
+    with pytest.raises(TypeError):
+        array_len(torch.tensor(1))

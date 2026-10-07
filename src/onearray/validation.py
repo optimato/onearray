@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import Any
-from numbers import Number, Real
+from numbers import Real
 from collections.abc import Callable, Sequence
 import math
 
@@ -48,7 +48,7 @@ def is_numberlike(x: Any) -> bool:
     Currently accepted scalar types include:
 
       - Python numeric scalars (including ``bool``, ``int``, ``float``, ``complex``,
-        and other ``numbers.Number`` implementations)
+        but not arbitrary ``numbers.Number`` implementations)
       - NumPy numeric scalars (subclasses of ``numpy.number``)
       - NumPy boolean scalar (``numpy.bool_``)
 
@@ -56,7 +56,9 @@ def is_numberlike(x: Any) -> bool:
     ``numpy.timedelta64``) are rejected. Support for additional scalar types may be
     added in the future.
     """
-    return isinstance(x, Number) or isinstance(x, numpy_scalar_types)
+    if isinstance(x, numpy_scalar_types):
+        return _is_numpy_numeric_or_bool_dtype(x.dtype)
+    return isinstance(x, (bool, int, float, complex))
 
 
 def _is_numpy_numeric_or_bool_dtype(dtype: Any) -> bool:
@@ -73,8 +75,7 @@ def _is_numpy_numeric_or_bool_dtype(dtype: Any) -> bool:
     bool
         True if the dtype is numeric or boolean; False otherwise.
     """
-    np = require_numpy()
-    return np.issubdtype(dtype, np.number) or np.issubdtype(dtype, np.bool_)
+    return dtype.kind in "biufc"
 
 
 def _is_torch_numeric_or_bool_dtype(dtype: Any) -> bool:
@@ -109,9 +110,9 @@ def _is_torch_numeric_or_bool_dtype(dtype: Any) -> bool:
         torch.int32,
         torch.int64,
         torch.uint8,
-        torch.uint16,
-        torch.uint32,
-        torch.uint64,
+        getattr(torch, "uint16", None),
+        getattr(torch, "uint32", None),
+        getattr(torch, "uint64", None),
     )
 
 
@@ -229,8 +230,9 @@ def all_real_and(x: ArrayLike, predicate: Callable[[Any], Any]) -> bool:
     Notes
     -----
     - Boolean values are not considered real and always result in ``False``.
-    - Complex-valued arrays or tensors result in ``False``.
+    - Nonempty complex-valued arrays or tensors result in ``False``.
     - Integer arrays and tensors are treated as finite.
+    - Empty array-like values return ``True``, regardless of numeric dtype.
     - Python sequences are traversed recursively.
     """
     if not is_array_like(x):
@@ -245,6 +247,8 @@ def all_real_and(x: ArrayLike, predicate: Callable[[Any], Any]) -> bool:
     # ---- NumPy ----
     if isinstance(x, numpy_array_types):
         np = require_numpy()
+        if x.size == 0:
+            return True
         if np.iscomplexobj(x) or x.dtype == np.bool_:
             return False
         return bool(np.all(np.isfinite(x) & predicate(x)))
@@ -252,6 +256,8 @@ def all_real_and(x: ArrayLike, predicate: Callable[[Any], Any]) -> bool:
     # ---- Torch ----
     if isinstance(x, torch_tensor_types):
         torch = require_torch()
+        if x.numel() == 0:
+            return True
         if x.is_complex() or x.dtype == torch.bool:
             return False
 
@@ -311,6 +317,7 @@ def is_real(x: ArrayLike) -> bool:
 
     Notes
     -----
+    - Empty array-like values return ``True``, regardless of numeric dtype.
     - Python sequences are traversed recursively.
     - This is equivalent to ``all_real_and(x, lambda _: True)``.
     """
@@ -345,6 +352,7 @@ def is_real_positive(x: ArrayLike) -> bool:
 
     Notes
     -----
+    - Empty array-like values return ``True``, regardless of numeric dtype.
     - Python sequences are traversed recursively.
     - This is equivalent to ``all_real_and(x, lambda v: v > 0)``.
     """
@@ -379,6 +387,7 @@ def is_real_nonnegative(x: ArrayLike) -> bool:
 
     Notes
     -----
+    - Empty array-like values return ``True``, regardless of numeric dtype.
     - Python sequences are traversed recursively.
     - This is equivalent to ``all_real_and(x, lambda v: v >= 0)``.
     """
