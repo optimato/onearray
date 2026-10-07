@@ -63,12 +63,12 @@ nav = [
     {"Arrays and backends" = "guide/arrays-and-backends.md"},
     {"Conversion and memory" = "guide/conversion-and-memory.md"},
   ]},
+  "API Reference",
   {"Development" = [
     {"API contracts" = "contracts.md"},
+    {"Versioning and public API" = "versioning.md"},
+    {"Changelog" = "https://github.com/optimato/onearray/blob/main/CHANGELOG.md"},
   ]},
-#  {"API" = [
-#    {"types" = "api/types.md"}
-#  ]}
 ]
 
 # With the "extra_css" option you can add your own CSS styling to customize
@@ -79,7 +79,7 @@ nav = [
 #
 # Read more: https://zensical.org/docs/customization/#additional-css
 #
-#extra_css = ["stylesheets/extra.css"]
+extra_css = ["stylesheets/extra.css"]
 
 # With the `extra_javascript` option you can add your own JavaScript to your
 # project to customize the behavior according to your needs.
@@ -378,5 +378,25 @@ paths = ["src"]
 
 [project.plugins.mkdocstrings.handlers.python.options]
 docstring_style = "numpy"
+filters = ["!^_", "!^(checks|convert|errors|fourier|math)$"]
 inherited_members = true
+members_order = "source"
+show_root_heading = true
 show_source = true
+show_symbol_type_heading = true
+show_symbol_type_toc = true
+summary = true
+
+[project.plugins.api-autonav]
+modules = ["src/onearray"]
+exclude = [
+  "onearray.checks",
+  "onearray.convert",
+  "onearray.errors",
+  "onearray.fourier",
+  "onearray.math",
+]
+nav_section_title = "API Reference"
+api_root_uri = "reference"
+exclude_private = true
+show_full_namespace = false

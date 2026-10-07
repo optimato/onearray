@@ -106,21 +106,22 @@ number of entries in that tuple.
 
 ## Public API surface
 
-The package root exports the following functions:
+The package root exports the following functions as public API:
 
 - Shape: `dim`.
 - Conversion: `array`, `asarray`, `add_axis`, `to_list`, and `zeros_like`.
 - Mathematics: `sum`, `exp`, and `abs`.
 - Fourier: `fft`, `ifft`, `fftfreq`, `fftshift`, and `ifftshift`.
 
-Validation functions are available from `onearray.validation`. `infer_shape` is
-available from `onearray.shape`; neither module's API is re-exported from the
-package root.
+The public submodule APIs are the names listed in `__all__` by
+`onearray.validation`, `onearray.shape`, and `onearray.types`. They are not
+re-exported from the package root unless listed above. All other modules and
+names are implementation details.
 
-Deprecated checks may remain temporarily as compatibility shims, but supported
-OneArray code must never call them. Internal code must use the new validation
-API directly. The version and mechanism by which deprecated checks are removed
-remain to be decided.
+The deprecated `onearray.checks` compatibility module is not public API and is
+not included in the API reference. Supported OneArray code must use the
+validation API directly. See [Versioning and public API](versioning.md) for the
+complete compatibility policy.
 
 ## Validation contracts
 

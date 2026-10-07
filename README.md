@@ -15,7 +15,8 @@ the same backend—there is no wrapper array class to learn.
 
 ## Alpha status
 
-`v0.1.0a1` is an early release intended to gather feedback. The most useful
+`v0.1.0-alpha.1` is an early release intended to gather feedback. PyPI displays
+this version in its normalized Python form, `0.1.0a1`. The most useful
 reports cover API ergonomics, NumPy/PyTorch behavior differences, conversion
 semantics, and operations you need but cannot express yet. Please report them
 in [GitHub Issues](https://github.com/optimato/onearray/issues).
@@ -70,6 +71,11 @@ values = oa.to_list(y)
 ## Documentation
 
 Read the full documentation at [optimato.github.io/onearray](https://optimato.github.io/onearray/).
+
+OneArray follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html).
+Its public API and versioning policy are defined in the
+[versioning documentation](https://optimato.github.io/onearray/versioning/),
+and notable changes are recorded in the [changelog](CHANGELOG.md).
 
 ## Running tests
 

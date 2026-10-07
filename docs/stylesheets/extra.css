@@ -1,0 +1,4 @@
+/* Keep mkdocstrings' generated module badge distinct from its navigation label. */
+.doc-symbol-nav {
+  margin-inline-end: 0.35em;
+}

@@ -15,6 +15,13 @@ numpy = ["numpy>=1.23"]
 torch = ["torch>=2"]
 test = ["numpy>=1.23", "pytest>=8"]
 lint = ["black==26.10.0", "ruff==0.16.10"]
+docs = ["zensical>=0.0.66,<0.1", "mkdocstrings-python>=2,<3"]
+
+[project.urls]
+Documentation = "https://optimato.github.io/onearray/"
+Repository = "https://github.com/optimato/onearray"
+Issues = "https://github.com/optimato/onearray/issues"
+Changelog = "https://github.com/optimato/onearray/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]
